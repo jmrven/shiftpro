@@ -1,8 +1,10 @@
 # ShiftPro Development Status
 
-**Last updated:** 2026-04-19 (Phase 1 functionally complete)  
+**Last updated:** 2026-04-19 (Phase 1 fully complete — deployed to production)
 **Supabase project ID:** `yeecbnjbtaflxxixvlfq`  
 **Working directory:** `shiftpro-web/`
+**Production URL:** `https://shiftpro-production.up.railway.app`
+**GitHub repo:** `https://github.com/jmrven/shiftpro`
 
 ---
 
@@ -29,15 +31,11 @@
 | Test infra | ✅ | Vitest + @testing-library/react + jsdom configured. vitest.config.ts + src/test/setup.ts. |
 | 018 storage RLS fix | ✅ | Added exports_update policy + WITH CHECK on all UPDATE policies to prevent path manipulation. |
 
-### Remaining for Phase 1
+### Remaining for Phase 1 (intentionally deferred)
 
-| Task | Priority | Notes |
-|------|----------|-------|
-| 1.4 JWT hook | Low | Hook exists but doesn't embed claims — **worked around** (see below). Not blocking. |
-| ~~1.5 Storage buckets~~ | ~~Medium~~ | ~~Done — see Completed above.~~ |
-| ~~1.12 Profile edit form~~ | ~~Medium~~ | ~~Done — see Completed above.~~ |
-| ~~1.14 PWA config~~ | ~~Low~~ | ~~Done — see Completed above.~~ |
-| 1.15 Railway deployment | Low | No CI/CD pipeline yet. Dev only. Deferred. |
+| Task | Notes |
+|------|-------|
+| 1.4 JWT hook | Hook exists but doesn't embed claims — **worked around** (see below). Not blocking Phase 2. |
 
 ---
 
@@ -126,14 +124,14 @@ All deployed to project `yeecbnjbtaflxxixvlfq` with `--no-verify-jwt`.
 | Function | Status | Notes |
 |----------|--------|-------|
 | `create-organization` | ✅ Working | Creates org + admin profile. Signs user out after so fresh login gets profile via DB. |
-| `invite-employee` | ✅ Working | Uses `SITE_URL` secret for redirect. Set to `http://localhost:5173`. |
+| `invite-employee` | ✅ Working | Uses `SITE_URL` secret for redirect. Set to `https://shiftpro-production.up.railway.app`. |
 | `_shared/auth.ts` | ✅ Fixed | User-scoped client for ES256 + DB profile lookup for org/role |
 | `_shared/audit.ts` | ✅ Ready | Used by invite-employee |
 | `_shared/cors.ts` | ✅ Ready | Standard CORS headers |
 | All others | 🔲 Scaffolded | Exists as files, not yet deployed or tested (Phase 2+) |
 
 **Supabase secrets set:**
-- `SITE_URL=http://localhost:5173` (used by invite-employee for redirect URL)
+- `SITE_URL=https://shiftpro-production.up.railway.app` (used by invite-employee for redirect URL)
 
 ---
 
@@ -149,14 +147,13 @@ All deployed to project `yeecbnjbtaflxxixvlfq` with `--no-verify-jwt`.
 
 ### Employee invite flow
 1. Admin opens `/employees` → clicks "Invite employee" → fills InviteModal
-2. `invite-employee` Edge Function: verifies admin auth, creates Supabase Auth user, creates `profiles` row (status: invited), sends invite email to `http://localhost:5173/accept-invite`
+2. `invite-employee` Edge Function: verifies admin auth, creates Supabase Auth user, creates `profiles` row (status: invited), sends invite email to `https://shiftpro-production.up.railway.app/accept-invite`
 3. Employee clicks link → lands on `/accept-invite` → sets password
 4. `AcceptInvitePage` calls `supabase.auth.updateUser({ password })` → then `profiles.update({ status: 'active' })` → then `loadProfile` → navigates to `/`
 
 ### Redirect URL config (Supabase Dashboard)
-- **Site URL:** `http://localhost:5173`
-- **Allowed redirect URLs:** must include `http://localhost:5173/accept-invite`
-- Update both when deploying to production
+- **Site URL:** `https://shiftpro-production.up.railway.app`
+- **Allowed redirect URLs:** includes `https://shiftpro-production.up.railway.app/accept-invite`
 
 ---
 
@@ -181,8 +178,8 @@ All deployed to project `yeecbnjbtaflxxixvlfq` with `--no-verify-jwt`.
 |-------|--------|---------------|
 | JWT hook (`custom_access_token_hook`) not embedding claims | Low — worked around | Debug hook registration in Supabase Dashboard → Auth → Hooks. Should show `pg-functions://postgres/public/custom_access_token_hook` |
 | `loadProfile` called on every token refresh | Minor perf | Acceptable for now. Add debounce if it causes issues. |
-| `SITE_URL` secret is localhost | Blocks production invites | Update secret to production URL before Railway deploy |
 | `invite-employee` allows re-inviting after accept | UX | Check status before sending invite |
+| Avatar upload not implemented | UX — placeholder initials shown | Implement in later phase using `avatars` storage bucket |
 
 ---
 
@@ -208,20 +205,36 @@ supabase db push
 
 ---
 
-## Phase 1 Status: Functionally Complete
+## Phase 1 Status: ✅ COMPLETE
 
-Phase 1 is functionally complete. All core features (auth, employee management, storage, profile editing, PWA config, test infrastructure) are implemented and passing. Two items remain deferred and are not blocking Phase 2:
+All 15 Phase 1 tasks are done. App is live in production.
 
-- **JWT hook (1.4):** Worked around via DB profile lookup. Revisit when deploying to production.
-- **Railway deployment (1.15):** Deferred until Phase 2 or later. Update `SITE_URL` secret before deploying.
+| Item | Status |
+|------|--------|
+| Supabase project + migrations (001–018) | ✅ |
+| RLS policies (all tables) | ✅ |
+| Auth pages (login, onboarding, accept-invite) | ✅ |
+| App shell (sidebar, topbar, route guards) | ✅ |
+| Employee management (list, invite, profile view+edit) | ✅ |
+| Storage buckets (avatars, policies, exports, org-assets) | ✅ |
+| Edge Functions (create-organization, invite-employee) | ✅ |
+| TypeScript types (generated from live schema) | ✅ |
+| Test infrastructure (Vitest + @testing-library/react) | ✅ |
+| PWA config + icons | ✅ |
+| Railway deployment | ✅ Live at `https://shiftpro-production.up.railway.app` |
+| JWT hook (1.4) | ⏸ Deferred — worked around, not blocking |
 
-## Next Steps — Phase 2: Scheduling
+---
 
-Full schedule editor grid, shift CRUD, drag-and-drop, publish flow. See `08-IMPLEMENTATION-ROADMAP.md`.
+## Next: Phase 2 — Scheduling
 
-Priority order:
-1. Schedule editor grid (week view, location/role rows)
-2. Shift CRUD (create, edit, delete, copy)
-3. Drag-and-drop (reorder, reassign)
-4. Publish flow (draft → published → employee notifications)
-5. Shift templates
+See `08-IMPLEMENTATION-ROADMAP.md` tasks 2.1–2.23.
+
+**Start here:**
+1. `2.1` Schedule editor grid — employee rows × day columns, week view, shift blocks
+2. `2.2` Shift CRUD — create/edit/delete modal, position/job site selection
+3. `2.3` `create-shift` Edge Function — conflict detection + validation
+4. `2.4` Drag-and-drop shifts — react-dnd (already installed)
+5. `2.9` Publish/unpublish — `publish-schedule` Edge Function + notification dispatch
+
+**Key dependency:** Phase 2 scheduling UI depends on the `schedules`, `shifts`, `positions`, and `job_sites` tables — all already migrated and RLS-ready.
