@@ -1,13 +1,16 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { useUpdateEmployee } from '@/hooks/useEmployees';
 import { useAuthStore } from '@/stores/authStore';
+import type { Database } from '@/types/database';
+
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 
 export const profileSchema = z.object({
   first_name: z.string().min(1, 'Required'),
@@ -29,6 +32,12 @@ export function EmployeeProfilePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const updateEmployee = useUpdateEmployee();
+
+  useEffect(() => {
+    setSaveSuccess(false);
+    setSaveError(null);
+    setIsEditing(false);
+  }, [id]);
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ['employee', id],
@@ -75,32 +84,26 @@ export function EmployeeProfilePage() {
     setSaveError(null);
     setSaveSuccess(false);
 
-    const updates: Record<string, unknown> = {
-      phone: values.phone || null,
-    };
-
-    if (isAdminOrManager) {
-      updates.first_name = values.first_name;
-      updates.last_name = values.last_name;
-      updates.hire_date = values.hire_date || null;
-      updates.employee_number = values.employee_number || null;
-    }
-
-    if (isAdmin) {
-      updates.hourly_rate =
-        values.hourly_rate === '' || values.hourly_rate === undefined
-          ? null
-          : Number(values.hourly_rate);
-      if (values.role) updates.role = values.role;
-      if (values.status) updates.status = values.status;
-    }
+    const base: ProfileUpdate = { phone: values.phone || null };
+    const adminManagerUpdates: ProfileUpdate = isAdminOrManager ? {
+      first_name: values.first_name,
+      last_name: values.last_name,
+      hire_date: values.hire_date || null,
+      employee_number: values.employee_number || null,
+    } : {};
+    const adminUpdates: ProfileUpdate = isAdmin ? {
+      hourly_rate: values.hourly_rate === '' || values.hourly_rate === undefined ? null : Number(values.hourly_rate),
+      ...(values.role ? { role: values.role } : {}),
+      ...(values.status ? { status: values.status } : {}),
+    } : {};
+    const updates: ProfileUpdate = { ...base, ...adminManagerUpdates, ...adminUpdates };
 
     try {
       await updateEmployee.mutateAsync({ id, updates });
       setSaveSuccess(true);
       setIsEditing(false);
     } catch (err: unknown) {
-      setSaveError(err instanceof Error ? err.message : 'Save failed.');
+      setSaveError((err as { message?: string }).message ?? 'Save failed.');
     }
   }
 
@@ -164,7 +167,7 @@ export function EmployeeProfilePage() {
               [
                 'Hire date',
                 employee.hire_date
-                  ? format(new Date(employee.hire_date), 'MMM d, yyyy')
+                  ? format(parseISO(employee.hire_date), 'MMM d, yyyy')
                   : '—',
               ],
               ['Hourly rate', employee.hourly_rate ? `$${employee.hourly_rate}/hr` : '—'],
