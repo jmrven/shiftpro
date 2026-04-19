@@ -1,6 +1,7 @@
 -- Fix storage RLS policies: add exports_update policy and WITH CHECK on UPDATE policies
 
--- Fix exports_update policy (was missing)
+-- Fix exports_update policy (017 may or may not have it — drop first to be idempotent)
+DROP POLICY IF EXISTS "exports_update" ON storage.objects;
 CREATE POLICY "exports_update" ON storage.objects FOR UPDATE
   USING (
     bucket_id = 'exports'
