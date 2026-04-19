@@ -35,6 +35,14 @@ CREATE POLICY "avatars_update" ON storage.objects FOR UPDATE
       (storage.foldername(name))[2] = auth.uid()::text
       OR public.my_role() IN ('admin', 'manager')
     )
+  )
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = public.my_organization_id()::text
+    AND (
+      (storage.foldername(name))[2] = auth.uid()::text
+      OR public.my_role() IN ('admin', 'manager')
+    )
   );
 
 CREATE POLICY "avatars_delete" ON storage.objects FOR DELETE
@@ -69,6 +77,11 @@ CREATE POLICY "policies_update" ON storage.objects FOR UPDATE
     bucket_id = 'policies'
     AND (storage.foldername(name))[1] = public.my_organization_id()::text
     AND public.my_role() = 'admin'
+  )
+  WITH CHECK (
+    bucket_id = 'policies'
+    AND (storage.foldername(name))[1] = public.my_organization_id()::text
+    AND public.my_role() = 'admin'
   );
 
 CREATE POLICY "policies_delete" ON storage.objects FOR DELETE
@@ -96,6 +109,18 @@ CREATE POLICY "exports_insert" ON storage.objects FOR INSERT
     AND public.my_role() IN ('admin', 'manager')
   );
 
+CREATE POLICY "exports_update" ON storage.objects FOR UPDATE
+  USING (
+    bucket_id = 'exports'
+    AND (storage.foldername(name))[1] = public.my_organization_id()::text
+    AND public.my_role() IN ('admin', 'manager')
+  )
+  WITH CHECK (
+    bucket_id = 'exports'
+    AND (storage.foldername(name))[1] = public.my_organization_id()::text
+    AND public.my_role() IN ('admin', 'manager')
+  );
+
 CREATE POLICY "exports_delete" ON storage.objects FOR DELETE
   USING (
     bucket_id = 'exports'
@@ -116,6 +141,11 @@ CREATE POLICY "org_assets_insert" ON storage.objects FOR INSERT
 
 CREATE POLICY "org_assets_update" ON storage.objects FOR UPDATE
   USING (
+    bucket_id = 'org-assets'
+    AND (storage.foldername(name))[1] = public.my_organization_id()::text
+    AND public.my_role() = 'admin'
+  )
+  WITH CHECK (
     bucket_id = 'org-assets'
     AND (storage.foldername(name))[1] = public.my_organization_id()::text
     AND public.my_role() = 'admin'
