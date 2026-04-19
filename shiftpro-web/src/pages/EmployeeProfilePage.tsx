@@ -1,3 +1,18 @@
+import { z } from 'zod';
+
+export const profileSchema = z.object({
+  first_name: z.string().min(1, 'Required'),
+  last_name: z.string().min(1, 'Required'),
+  phone: z.string().optional().or(z.literal('')),
+  hire_date: z.string().optional().or(z.literal('')),
+  hourly_rate: z.coerce.number().min(0).optional().or(z.literal('')),
+  employee_number: z.string().optional().or(z.literal('')),
+  role: z.enum(['admin', 'manager', 'employee']).optional(),
+  status: z.enum(['active', 'inactive', 'invited']).optional(),
+});
+
+export type ProfileFormValues = z.infer<typeof profileSchema>;
+
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';

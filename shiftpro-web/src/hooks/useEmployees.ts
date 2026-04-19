@@ -43,7 +43,11 @@ export function useUpdateEmployee() {
     mutationFn: async ({ id, updates }: { id: string; updates: ProfileUpdate }) => {
       const { error } = await supabase.from('profiles').update(updates).eq('id', id);
       if (error) throw error;
+      return id;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees', organizationId] }),
+    onSuccess: (id) => {
+      qc.invalidateQueries({ queryKey: ['employees', organizationId] });
+      qc.invalidateQueries({ queryKey: ['employee', id] });
+    },
   });
 }
