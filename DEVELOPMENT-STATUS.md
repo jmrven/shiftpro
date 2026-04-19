@@ -1,6 +1,6 @@
 # ShiftPro Development Status
 
-**Last updated:** 2026-04-19  
+**Last updated:** 2026-04-19 (Phase 1 functionally complete)  
 **Supabase project ID:** `yeecbnjbtaflxxixvlfq`  
 **Working directory:** `shiftpro-web/`
 
@@ -23,16 +23,21 @@
 | 1.11 invite-employee | Deployed with `--no-verify-jwt` |
 | 1.12 Employee Management UI | EmployeesPage (list, search), InviteModal, EmployeeProfilePage |
 | 1.13 TypeScript types | Generated from live schema: `src/types/database.ts` |
+| 1.5 Storage buckets | ✅ | avatars, policies, exports, org-assets with RLS via my_organization_id()/my_role() helpers. Migration 017 + 018 (security fix). |
+| 1.12 Profile edit form | ✅ | Inline edit. Role-gated fields (admin/manager: name+hire_date+employee_number, admin only: hourly_rate+role+status, self: phone). |
+| 1.14 PWA config | ✅ | vite-plugin-pwa configured + all icon files generated via sharp (mask-icon.svg, favicon.ico, apple-touch-icon.png, pwa-192x192.png, pwa-512x512.png). |
+| Test infra | ✅ | Vitest + @testing-library/react + jsdom configured. vitest.config.ts + src/test/setup.ts. |
+| 018 storage RLS fix | ✅ | Added exports_update policy + WITH CHECK on all UPDATE policies to prevent path manipulation. |
 
 ### Remaining for Phase 1
 
 | Task | Priority | Notes |
 |------|----------|-------|
 | 1.4 JWT hook | Low | Hook exists but doesn't embed claims — **worked around** (see below). Not blocking. |
-| 1.5 Storage buckets | Medium | avatars, policies, exports, org-assets buckets not created yet. Needed for avatar uploads. |
-| 1.12 Profile edit form | Medium | `EmployeeProfilePage` exists but edit functionality not verified end-to-end. |
-| 1.14 PWA config | Low | Vite PWA plugin not installed yet. |
-| 1.15 Railway deployment | Low | No CI/CD pipeline yet. Dev only. |
+| ~~1.5 Storage buckets~~ | ~~Medium~~ | ~~Done — see Completed above.~~ |
+| ~~1.12 Profile edit form~~ | ~~Medium~~ | ~~Done — see Completed above.~~ |
+| ~~1.14 PWA config~~ | ~~Low~~ | ~~Done — see Completed above.~~ |
+| 1.15 Railway deployment | Low | No CI/CD pipeline yet. Dev only. Deferred. |
 
 ---
 
@@ -109,6 +114,8 @@ const { data: { user } } = await userClient.auth.getUser(); // no token arg
 | `014_seed.sql` | Seed data |
 | `015_fix_profiles_rls.sql` | Added `self_select` policy (id = auth.uid()) — precursor to 016 |
 | `016_fix_profiles_rls_recursion.sql` | **Full recursion fix** — security definer helpers + rewrote all profile policies |
+| `017_storage_buckets.sql` | Created avatars, policies, exports, org-assets buckets with RLS using my_organization_id()/my_role() helpers |
+| `018_storage_rls_fix.sql` | Added exports_update policy + WITH CHECK on all UPDATE policies to prevent path manipulation |
 
 ---
 
@@ -174,7 +181,6 @@ All deployed to project `yeecbnjbtaflxxixvlfq` with `--no-verify-jwt`.
 |-------|--------|---------------|
 | JWT hook (`custom_access_token_hook`) not embedding claims | Low — worked around | Debug hook registration in Supabase Dashboard → Auth → Hooks. Should show `pg-functions://postgres/public/custom_access_token_hook` |
 | `loadProfile` called on every token refresh | Minor perf | Acceptable for now. Add debounce if it causes issues. |
-| Storage buckets not created | Blocks avatar uploads | Create in Supabase Dashboard: avatars, policies, exports, org-assets |
 | `SITE_URL` secret is localhost | Blocks production invites | Update secret to production URL before Railway deploy |
 | `invite-employee` allows re-inviting after accept | UX | Check status before sending invite |
 
@@ -202,12 +208,20 @@ supabase db push
 
 ---
 
-## Next Steps (Phase 1 completion)
+## Phase 1 Status: Functionally Complete
 
-1. Create Storage buckets in Supabase Dashboard (avatars, policies, exports, org-assets)
-2. Test and fix employee profile edit form (`EmployeeProfilePage`)
-3. Install Vite PWA plugin (`vite-plugin-pwa`) + manifest + icons
-4. Set up Railway deployment + update `SITE_URL` secret
+Phase 1 is functionally complete. All core features (auth, employee management, storage, profile editing, PWA config, test infrastructure) are implemented and passing. Two items remain deferred and are not blocking Phase 2:
 
-## Then Phase 2 — Scheduling
+- **JWT hook (1.4):** Worked around via DB profile lookup. Revisit when deploying to production.
+- **Railway deployment (1.15):** Deferred until Phase 2 or later. Update `SITE_URL` secret before deploying.
+
+## Next Steps — Phase 2: Scheduling
+
 Full schedule editor grid, shift CRUD, drag-and-drop, publish flow. See `08-IMPLEMENTATION-ROADMAP.md`.
+
+Priority order:
+1. Schedule editor grid (week view, location/role rows)
+2. Shift CRUD (create, edit, delete, copy)
+3. Drag-and-drop (reorder, reassign)
+4. Publish flow (draft → published → employee notifications)
+5. Shift templates
