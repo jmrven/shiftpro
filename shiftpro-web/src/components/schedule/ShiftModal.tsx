@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { useCreateShift, useUpdateShift, useDeleteShift } from '@/hooks/useShifts';
 import type { ShiftRow } from '@/hooks/useShifts';
@@ -13,10 +13,7 @@ const schema = z.object({
   end_time:      z.string().min(1, 'End time is required'),
   break_minutes: z.number().min(0).max(480),
   notes:         z.string().optional(),
-}).refine(
-  (d) => d.start_time < d.end_time,
-  { message: 'End time must be after start time', path: ['end_time'] }
-);
+});
 
 type FormValues = z.infer<typeof schema>;
 
@@ -39,6 +36,9 @@ export function ShiftModal({
   const updateShift = useUpdateShift();
   const deleteShift = useDeleteShift();
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   const {
     register, handleSubmit, reset, formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -53,7 +53,7 @@ export function ShiftModal({
   });
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) { setConfirmDelete(false); return; }
     if (editShift) {
       const startLocal = toZonedTime(new Date(editShift.start_time), timezone);
       const endLocal   = toZonedTime(new Date(editShift.end_time), timezone);
@@ -76,36 +76,60 @@ export function ShiftModal({
   }, [open, editShift, defaultDate, timezone, reset]);
 
   async function onSubmit(values: FormValues) {
-    const startUtc = fromZonedTime(`${values.date}T${values.start_time}`, timezone).toISOString();
-    const endUtc   = fromZonedTime(`${values.date}T${values.end_time}`, timezone).toISOString();
+    setSubmitError(null);
+    try {
+      const startUtc = fromZonedTime(`${values.date}T${values.start_time}`, timezone).toISOString();
+      // If end time is strictly before start time, it's an overnight shift (next day)
+      const isOvernight = values.end_time < values.start_time;
+      const endDateStr = isOvernight
+        ? format(addDays(parseISO(values.date), 1), 'yyyy-MM-dd')
+        : values.date;
+      const endUtc = fromZonedTime(`${endDateStr}T${values.end_time}`, timezone).toISOString();
 
-    if (editShift) {
-      await updateShift.mutateAsync({
-        id: editShift.id,
-        start_time: startUtc,
-        end_time: endUtc,
-        break_minutes: values.break_minutes,
-        notes: values.notes ?? null,
-      });
-    } else {
-      await createShift.mutateAsync({
-        schedule_id: scheduleId,
-        profile_id: defaultProfileId ?? null,
-        position_id: null,
-        job_site_id: null,
-        start_time: startUtc,
-        end_time: endUtc,
-        break_minutes: values.break_minutes,
-        notes: values.notes,
-      });
+      if (new Date(endUtc) <= new Date(startUtc)) {
+        setSubmitError('End time must be after start time');
+        return;
+      }
+
+      if (editShift) {
+        await updateShift.mutateAsync({
+          id: editShift.id,
+          start_time: startUtc,
+          end_time: endUtc,
+          break_minutes: values.break_minutes,
+          notes: values.notes ?? null,
+        });
+      } else {
+        await createShift.mutateAsync({
+          schedule_id: scheduleId,
+          profile_id: defaultProfileId ?? null,
+          position_id: null,
+          job_site_id: null,
+          start_time: startUtc,
+          end_time: endUtc,
+          break_minutes: values.break_minutes,
+          notes: values.notes || undefined,
+        });
+      }
+      onClose();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message
+        : (err as { message?: string }).message ?? 'An unexpected error occurred.';
+      setSubmitError(msg);
     }
-    onClose();
   }
 
   async function handleDelete() {
     if (!editShift) return;
-    await deleteShift.mutateAsync(editShift.id);
-    onClose();
+    setSubmitError(null);
+    try {
+      await deleteShift.mutateAsync(editShift.id);
+      onClose();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message
+        : (err as { message?: string }).message ?? 'An unexpected error occurred.';
+      setSubmitError(msg);
+    }
   }
 
   if (!open) return null;
@@ -156,16 +180,30 @@ export function ShiftModal({
             <input id="notes" type="text" {...register('notes')} className={inputCls} />
           </div>
 
+          {submitError && (
+            <p className="text-xs text-destructive">{submitError}</p>
+          )}
+
           <div className="flex items-center justify-between gap-2 pt-2">
             {editShift && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleteShift.isPending}
-                className="rounded-md bg-destructive text-destructive-foreground px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-              >
-                Delete
-              </button>
+              confirmDelete ? (
+                <div className="flex gap-2 items-center">
+                  <span className="text-xs text-destructive">Confirm delete?</span>
+                  <button type="button" onClick={handleDelete} disabled={deleteShift.isPending || isSubmitting}
+                    className="text-xs px-2 py-1 rounded bg-destructive text-destructive-foreground">
+                    Yes, delete
+                  </button>
+                  <button type="button" onClick={() => setConfirmDelete(false)}
+                    className="text-xs px-2 py-1 rounded border">
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setConfirmDelete(true)}
+                  className="text-xs px-2 py-1 rounded border border-destructive text-destructive">
+                  Delete
+                </button>
+              )
             )}
             <div className="flex gap-2 ml-auto">
               <button
