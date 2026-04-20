@@ -19,6 +19,18 @@ export type ShiftRow = {
   profile: { first_name: string; last_name: string; hourly_rate: number | null } | null;
 };
 
+export type UpdateShiftPayload = {
+  id: string;
+  profile_id?: string | null;
+  position_id?: string | null;
+  job_site_id?: string | null;
+  start_time?: string;
+  end_time?: string;
+  break_minutes?: number;
+  notes?: string | null;
+  color?: string | null;
+};
+
 export type CreateShiftPayload = {
   schedule_id: string;
   profile_id: string | null;
@@ -65,7 +77,7 @@ export function useCreateShift() {
 export function useUpdateShift() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, position: _pos, profile: _prof, ...patch }: Partial<ShiftRow> & { id: string }) => {
+    mutationFn: async ({ id, ...patch }: UpdateShiftPayload) => {
       const { data, error } = await supabase
         .from('shifts')
         .update(patch)
