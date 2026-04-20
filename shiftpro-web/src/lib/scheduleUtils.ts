@@ -26,7 +26,7 @@ export function shiftLaborCost(
 
 export function formatShiftTime(date: Date, timezone: string): string {
   const zoned = toZonedTime(date, timezone);
-  return format(zoned, 'h:mm aa', { timeZone: timezone });
+  return format(zoned, 'h:mm a', { timeZone: timezone });
 }
 
 /**

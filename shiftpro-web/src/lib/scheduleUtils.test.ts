@@ -11,12 +11,14 @@ import {
 
 describe('getWeekDays', () => {
   it('returns 7 dates starting from Sunday for a mid-week date', () => {
-    const result = getWeekDays(new Date('2026-04-22T12:00:00Z')); // Wednesday
+    const result = getWeekDays(new Date(2026, 3, 22, 12, 0, 0)); // April 22 local noon
     expect(result).toHaveLength(7);
-    // Sunday April 19
-    expect(result[0].toISOString().slice(0, 10)).toBe('2026-04-19');
-    // Saturday April 25
-    expect(result[6].toISOString().slice(0, 10)).toBe('2026-04-25');
+    const first = result[0];
+    expect(first.getFullYear()).toBe(2026);
+    expect(first.getMonth()).toBe(3); // April
+    expect(first.getDate()).toBe(19); // Sunday April 19
+    const last = result[6];
+    expect(last.getDate()).toBe(25); // Saturday April 25
   });
 });
 
@@ -52,24 +54,45 @@ describe('formatShiftTime', () => {
 
 describe('shiftsForCell', () => {
   it('returns shifts matching profile_id and date in org timezone', () => {
-    const shifts = [
+    const shifts: Array<{ id: string; profile_id: string | null; is_open_shift: boolean; start_time: string; end_time: string }> = [
       { id: '1', profile_id: 'abc', is_open_shift: false, start_time: '2026-04-22T15:00:00Z', end_time: '2026-04-22T23:00:00Z' },
       { id: '2', profile_id: 'xyz', is_open_shift: false, start_time: '2026-04-22T15:00:00Z', end_time: '2026-04-22T23:00:00Z' },
       { id: '3', profile_id: 'abc', is_open_shift: false, start_time: '2026-04-23T15:00:00Z', end_time: '2026-04-23T23:00:00Z' },
-    ] as any[];
+    ];
     const cellDate = new Date('2026-04-22T00:00:00Z');
     const result = shiftsForCell(shifts, 'abc', cellDate, 'America/Los_Angeles');
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('1');
   });
+
+  it('places shift on correct local date even when UTC date differs (negative-offset timezone)', () => {
+    // 2026-04-23T13:30:00Z = April 23 at 6:30 AM PDT (UTC-7) — belongs to Apr 23 local
+    const shifts: Array<{ id: string; profile_id: string | null; is_open_shift: boolean; start_time: string; end_time: string }> = [
+      { id: 'a', profile_id: 'abc', is_open_shift: false, start_time: '2026-04-23T13:30:00Z', end_time: '2026-04-23T21:30:00Z' },
+    ];
+    const cellDate = new Date('2026-04-23T00:00:00Z');
+    const result = shiftsForCell(shifts, 'abc', cellDate, 'America/Los_Angeles');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('a');
+  });
+
+  it('does not include shift from a different UTC date that is the same UTC date as cellDate but different local date', () => {
+    // 2026-04-22T23:30:00Z = April 22 at 4:30 PM PDT — belongs to Apr 22 local, not Apr 23
+    const shifts: Array<{ id: string; profile_id: string | null; is_open_shift: boolean; start_time: string; end_time: string }> = [
+      { id: 'b', profile_id: 'abc', is_open_shift: false, start_time: '2026-04-22T23:30:00Z', end_time: '2026-04-23T07:30:00Z' },
+    ];
+    const cellDate = new Date('2026-04-23T00:00:00Z'); // asking for Apr 23
+    const result = shiftsForCell(shifts, 'abc', cellDate, 'America/Los_Angeles');
+    expect(result).toHaveLength(0); // shift is on Apr 22 local, should not appear on Apr 23 cell
+  });
 });
 
 describe('openShiftsForCell', () => {
   it('returns only open shifts for the given date', () => {
-    const shifts = [
+    const shifts: Array<{ id: string; profile_id: string | null; is_open_shift: boolean; start_time: string; end_time: string }> = [
       { id: '1', profile_id: null,  is_open_shift: true,  start_time: '2026-04-22T15:00:00Z', end_time: '2026-04-22T23:00:00Z' },
       { id: '2', profile_id: 'abc', is_open_shift: false, start_time: '2026-04-22T15:00:00Z', end_time: '2026-04-22T23:00:00Z' },
-    ] as any[];
+    ];
     const cellDate = new Date('2026-04-22T00:00:00Z');
     const result = openShiftsForCell(shifts, cellDate, 'America/Los_Angeles');
     expect(result).toHaveLength(1);
