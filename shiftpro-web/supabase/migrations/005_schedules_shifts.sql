@@ -111,7 +111,7 @@ create table if not exists shift_requests (
   organization_id   uuid not null references organizations(id) on delete cascade,
   type              request_type not null,
   status            request_status not null default 'pending',
-  requester_id      uuid not null references profiles(id),
+  requester_id      uuid not null references profiles(id) on delete restrict,
   shift_id          uuid not null references shifts(id) on delete cascade,
   target_shift_id   uuid references shifts(id) on delete set null,
   target_profile_id uuid references profiles(id) on delete set null,
@@ -125,6 +125,9 @@ create table if not exists shift_requests (
 create index if not exists idx_shift_req_org       on shift_requests(organization_id);
 create index if not exists idx_shift_req_status    on shift_requests(organization_id, status);
 create index if not exists idx_shift_req_requester on shift_requests(requester_id);
+create index if not exists idx_template_shifts_template on schedule_template_shifts(template_id);
+create index if not exists idx_templates_org      on schedule_templates(organization_id);
+create index if not exists idx_templates_schedule on schedule_templates(schedule_id);
 create trigger shift_requests_updated_at before update on shift_requests
   for each row execute function update_updated_at();
 
@@ -159,9 +162,19 @@ alter table employee_availability   enable row level security;
 -- schedules
 create policy "schedules_read" on schedules for select
   using (organization_id = (select organization_id from profiles where id = auth.uid()));
-create policy "schedules_write" on schedules for all
+create policy "schedules_insert" on schedules for insert
+  with check (
+    organization_id = (select organization_id from profiles where id = auth.uid())
+    and (select role from profiles where id = auth.uid()) in ('admin', 'manager')
+  );
+create policy "schedules_update" on schedules for update
   using (organization_id = (select organization_id from profiles where id = auth.uid()))
   with check (
+    organization_id = (select organization_id from profiles where id = auth.uid())
+    and (select role from profiles where id = auth.uid()) in ('admin', 'manager')
+  );
+create policy "schedules_delete" on schedules for delete
+  using (
     organization_id = (select organization_id from profiles where id = auth.uid())
     and (select role from profiles where id = auth.uid()) in ('admin', 'manager')
   );
@@ -207,9 +220,19 @@ create policy "mgr_sched_write" on manager_schedules for all
 -- shifts
 create policy "shifts_read" on shifts for select
   using (organization_id = (select organization_id from profiles where id = auth.uid()));
-create policy "shifts_write" on shifts for all
+create policy "shifts_insert" on shifts for insert
+  with check (
+    organization_id = (select organization_id from profiles where id = auth.uid())
+    and (select role from profiles where id = auth.uid()) in ('admin', 'manager')
+  );
+create policy "shifts_update" on shifts for update
   using (organization_id = (select organization_id from profiles where id = auth.uid()))
   with check (
+    organization_id = (select organization_id from profiles where id = auth.uid())
+    and (select role from profiles where id = auth.uid()) in ('admin', 'manager')
+  );
+create policy "shifts_delete" on shifts for delete
+  using (
     organization_id = (select organization_id from profiles where id = auth.uid())
     and (select role from profiles where id = auth.uid()) in ('admin', 'manager')
   );
@@ -248,10 +271,22 @@ create policy "shift_req_insert" on shift_requests for insert
     organization_id = (select organization_id from profiles where id = auth.uid())
     and requester_id = auth.uid()
   );
-create policy "shift_req_update" on shift_requests for update
+-- managers can update any request (approve/deny/add note)
+create policy "shift_req_update_manager" on shift_requests for update
   using (organization_id = (select organization_id from profiles where id = auth.uid()))
   with check (
     (select role from profiles where id = auth.uid()) in ('admin', 'manager')
+  );
+-- employees can cancel their own pending requests
+create policy "shift_req_cancel_self" on shift_requests for update
+  using (
+    organization_id = (select organization_id from profiles where id = auth.uid())
+    and requester_id = auth.uid()
+    and status = 'pending'
+  )
+  with check (
+    requester_id = auth.uid()
+    and status = 'canceled'
   );
 
 -- employee_availability
