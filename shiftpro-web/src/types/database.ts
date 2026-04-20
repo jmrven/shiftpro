@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      employee_availability: {
+        Row: {
+          created_at: string
+          day_of_week: Database["public"]["Enums"]["day_of_week"]
+          end_time: string | null
+          id: string
+          is_available: boolean
+          organization_id: string
+          profile_id: string
+          start_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: Database["public"]["Enums"]["day_of_week"]
+          end_time?: string | null
+          id?: string
+          is_available?: boolean
+          organization_id: string
+          profile_id: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: Database["public"]["Enums"]["day_of_week"]
+          end_time?: string | null
+          id?: string
+          is_available?: boolean
+          organization_id?: string
+          profile_id?: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_availability_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_availability_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_schedules: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          schedule_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          schedule_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          schedule_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_schedules_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_schedules_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_sites: {
         Row: {
           address: string | null
@@ -51,6 +141,42 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manager_schedules: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          schedule_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          schedule_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          schedule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manager_schedules_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manager_schedules_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
             referencedColumns: ["id"]
           },
         ]
@@ -214,6 +340,344 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_template_shifts: {
+        Row: {
+          break_minutes: number
+          created_at: string
+          day_of_week: Database["public"]["Enums"]["day_of_week"]
+          end_time: string
+          id: string
+          notes: string | null
+          position_id: string | null
+          start_time: string
+          template_id: string
+        }
+        Insert: {
+          break_minutes?: number
+          created_at?: string
+          day_of_week: Database["public"]["Enums"]["day_of_week"]
+          end_time: string
+          id?: string
+          notes?: string | null
+          position_id?: string | null
+          start_time: string
+          template_id: string
+        }
+        Update: {
+          break_minutes?: number
+          created_at?: string
+          day_of_week?: Database["public"]["Enums"]["day_of_week"]
+          end_time?: string
+          id?: string
+          notes?: string | null
+          position_id?: string | null
+          start_time?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_template_shifts_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_template_shifts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          organization_id: string
+          schedule_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          schedule_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          schedule_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_templates_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedules: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_requests: {
+        Row: {
+          created_at: string
+          id: string
+          manager_note: string | null
+          organization_id: string
+          requester_id: string
+          requester_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          shift_id: string
+          status: Database["public"]["Enums"]["request_status"]
+          target_profile_id: string | null
+          target_shift_id: string | null
+          type: Database["public"]["Enums"]["request_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          manager_note?: string | null
+          organization_id: string
+          requester_id: string
+          requester_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shift_id: string
+          status?: Database["public"]["Enums"]["request_status"]
+          target_profile_id?: string | null
+          target_shift_id?: string | null
+          type: Database["public"]["Enums"]["request_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          manager_note?: string | null
+          organization_id?: string
+          requester_id?: string
+          requester_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shift_id?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          target_profile_id?: string | null
+          target_shift_id?: string | null
+          type?: Database["public"]["Enums"]["request_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_requests_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_requests_target_profile_id_fkey"
+            columns: ["target_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_requests_target_shift_id_fkey"
+            columns: ["target_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shifts: {
+        Row: {
+          break_minutes: number
+          color: string | null
+          created_at: string
+          created_by: string | null
+          end_time: string
+          id: string
+          is_open_shift: boolean
+          job_site_id: string | null
+          notes: string | null
+          organization_id: string
+          position_id: string | null
+          profile_id: string | null
+          published_at: string | null
+          schedule_id: string
+          start_time: string
+          status: Database["public"]["Enums"]["shift_status"]
+          updated_at: string
+        }
+        Insert: {
+          break_minutes?: number
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_time: string
+          id?: string
+          is_open_shift?: boolean
+          job_site_id?: string | null
+          notes?: string | null
+          organization_id: string
+          position_id?: string | null
+          profile_id?: string | null
+          published_at?: string | null
+          schedule_id: string
+          start_time: string
+          status?: Database["public"]["Enums"]["shift_status"]
+          updated_at?: string
+        }
+        Update: {
+          break_minutes?: number
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_time?: string
+          id?: string
+          is_open_shift?: boolean
+          job_site_id?: string | null
+          notes?: string | null
+          organization_id?: string
+          position_id?: string | null
+          profile_id?: string | null
+          published_at?: string | null
+          schedule_id?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["shift_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shifts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shifts_job_site_id_fkey"
+            columns: ["job_site_id"]
+            isOneToOne: false
+            referencedRelation: "job_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shifts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shifts_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shifts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shifts_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
             referencedColumns: ["id"]
           },
         ]
@@ -1187,7 +1651,18 @@ export type Database = {
       }
     }
     Enums: {
+      day_of_week:
+        | "sunday"
+        | "monday"
+        | "tuesday"
+        | "wednesday"
+        | "thursday"
+        | "friday"
+        | "saturday"
       employee_status: "active" | "inactive" | "invited"
+      request_status: "pending" | "approved" | "denied" | "canceled"
+      request_type: "swap" | "offer" | "drop" | "open_shift"
+      shift_status: "draft" | "published"
       user_role: "admin" | "manager" | "employee"
     }
     CompositeTypes: {
@@ -1324,7 +1799,19 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      day_of_week: [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+      ],
       employee_status: ["active", "inactive", "invited"],
+      request_status: ["pending", "approved", "denied", "canceled"],
+      request_type: ["swap", "offer", "drop", "open_shift"],
+      shift_status: ["draft", "published"],
       user_role: ["admin", "manager", "employee"],
     },
   },
