@@ -38,8 +38,8 @@ export function ShiftBlock({ shift, timezone, onClick }: Props) {
       aria-label={ariaLabel}
       className={cn(
         'w-full text-left rounded px-1.5 py-1 text-white text-xs',
-        'shadow-sm select-none cursor-grab transition-opacity',
-        isDragging ? 'opacity-40' : 'opacity-100',
+        'shadow-sm select-none transition-opacity',
+        isDragging ? 'opacity-40 cursor-grabbing' : 'opacity-100 cursor-grab',
       )}
     >
       <div className="font-semibold truncate">

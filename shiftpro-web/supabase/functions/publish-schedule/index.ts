@@ -24,8 +24,13 @@ serve(async (req) => {
       week_end?: string;
     };
 
-    if (!schedule_id) {
-      throw { code: 'VALIDATION_ERROR', message: 'schedule_id is required' };
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!schedule_id || !uuidRegex.test(schedule_id)) {
+      throw { code: 'VALIDATION_ERROR', message: 'schedule_id must be a valid UUID' };
+    }
+
+    if (week_start && week_end && week_start >= week_end) {
+      throw { code: 'VALIDATION_ERROR', message: 'week_end must be after week_start' };
     }
 
     const svc = createClient(
@@ -53,7 +58,7 @@ serve(async (req) => {
     if (week_start) query = query.gte('start_time', week_start);
     if (week_end)   query = query.lt('start_time', week_end);
 
-    const { count, error: updateErr } = await query.select('id', { count: 'exact' });
+    const { count, error: updateErr } = await query.select('id', { count: 'exact', head: true });
     if (updateErr) throw { code: 'INTERNAL_ERROR', message: updateErr.message };
 
     await createAuditLog(svc, {
@@ -62,7 +67,11 @@ serve(async (req) => {
       action: 'publish',
       entity_type: 'schedule',
       entity_id: schedule_id,
-      changes: { published_count: { old: null, new: count ?? 0 } },
+      changes: {
+        published_count: { old: null, new: count ?? 0 },
+        ...(week_start ? { week_start: { old: null, new: week_start } } : {}),
+        ...(week_end   ? { week_end:   { old: null, new: week_end   } } : {}),
+      },
     });
 
     return new Response(JSON.stringify({ data: { published_count: count ?? 0 } }), {
