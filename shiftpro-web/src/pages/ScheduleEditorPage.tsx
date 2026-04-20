@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { fromZonedTime, format as formatTz } from 'date-fns-tz';
 import { callFunction } from '@/lib/api';
@@ -14,8 +14,7 @@ import { ShiftModal } from '@/components/schedule/ShiftModal';
 import type { ShiftRow } from '@/hooks/useShifts';
 
 export function ScheduleEditorPage() {
-  // useAuthStore() without selector — compatible with vi.mock returning a plain object
-  const { organization } = useAuthStore();
+  const organization = useAuthStore((s) => s.organization);
   const timezone = organization?.timezone ?? 'America/Los_Angeles';
   const qc = useQueryClient();
 
@@ -24,6 +23,7 @@ export function ScheduleEditorPage() {
   );
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -50,10 +50,10 @@ export function ScheduleEditorPage() {
   const updateShift = useUpdateShift();
 
   // Build employee rates map
-  const employeeRates: Record<string, number | null> = {};
-  for (const emp of employees) {
-    employeeRates[emp.profile.id] = emp.profile.hourly_rate;
-  }
+  const employeeRates = useMemo(
+    () => Object.fromEntries(employees.map(({ profile }) => [profile.id, profile.hourly_rate])),
+    [employees],
+  );
 
   const handleWeekChange = useCallback((date: Date) => {
     setCurrentWeek(startOfWeek(date, { weekStartsOn: 0 }));
@@ -66,11 +66,14 @@ export function ScheduleEditorPage() {
   const handlePublish = useCallback(async () => {
     if (!activeScheduleId) return;
     setIsPublishing(true);
+    setPublishError(null);
     try {
       await callFunction('publish-schedule', { schedule_id: activeScheduleId });
       qc.invalidateQueries({ queryKey: ['shifts'] });
-    } catch (_err) {
-      // swallow publish errors silently for now
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message
+        : (err as { message?: string }).message ?? 'Failed to publish schedule.';
+      setPublishError(msg);
     } finally {
       setIsPublishing(false);
     }
@@ -137,6 +140,12 @@ export function ScheduleEditorPage() {
         onPublish={handlePublish}
         isPublishing={isPublishing}
       />
+
+      {publishError && (
+        <div className="px-4 py-2 text-sm text-destructive bg-destructive/10 border-b border-destructive/20">
+          {publishError}
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto">
         {isLoading ? (

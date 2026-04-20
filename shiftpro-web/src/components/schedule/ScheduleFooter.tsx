@@ -29,7 +29,14 @@ export function ScheduleFooter({ weekDays, shifts, timezone, employeeRates, defa
       ...allProfiles.flatMap((pid) => shiftsForCell(shifts, pid, day, timezone)),
       ...openShiftsForCell(shifts, day, timezone),
     ];
-    return calcDayTotals(dayShifts, employeeRates, defaultRate);
+    // Deduplicate by shift id
+    const seen = new Set<string>();
+    const uniqueDayShifts = dayShifts.filter((s) => {
+      if (seen.has(s.id)) return false;
+      seen.add(s.id);
+      return true;
+    });
+    return calcDayTotals(uniqueDayShifts, employeeRates, defaultRate);
   });
 
   const grandHours = dayTotals.reduce((a, d) => a + d.hours, 0);

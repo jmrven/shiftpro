@@ -14,7 +14,10 @@ vi.mock('@/hooks/useShifts', () => ({
   useUpdateShift: () => ({ mutateAsync: vi.fn() }),
 }));
 vi.mock('@/stores/authStore', () => ({
-  useAuthStore: () => ({ organization: { timezone: 'America/Los_Angeles' } }),
+  useAuthStore: (selector?: (s: { organization: { timezone: string } }) => unknown) => {
+    const state = { organization: { timezone: 'America/Los_Angeles' } };
+    return selector ? selector(state) : state;
+  },
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
