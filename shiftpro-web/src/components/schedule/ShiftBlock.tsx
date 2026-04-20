@@ -1,3 +1,4 @@
+import { cn } from '@/lib/cn';
 import { formatShiftTime, shiftDurationHours } from '@/lib/scheduleUtils';
 import type { ShiftRow } from '@/hooks/useShifts';
 
@@ -12,21 +13,27 @@ export function ShiftBlock({ shift, timezone, onClick, isDragging }: Props) {
   const color = shift.color ?? shift.position?.color ?? '#6366f1';
   const startLabel = formatShiftTime(new Date(shift.start_time), timezone);
   const endLabel   = formatShiftTime(new Date(shift.end_time), timezone);
-  const hours = shiftDurationHours(
+  const hours = Math.max(0, shiftDurationHours(
     new Date(shift.start_time),
     new Date(shift.end_time),
     shift.break_minutes,
-  );
+  ));
+
+  const employeeName = shift.profile
+    ? `${shift.profile.first_name} ${shift.profile.last_name}`
+    : 'Open shift';
+  const ariaLabel = `${employeeName}: ${startLabel}–${endLabel}, ${hours.toFixed(1)} hours${shift.status === 'draft' ? ', draft' : ''}`;
 
   return (
     <button
       onClick={() => onClick(shift)}
       style={{ backgroundColor: color }}
-      className={`
-        w-full text-left rounded px-1.5 py-1 text-white text-xs
-        shadow-sm select-none cursor-pointer transition-opacity
-        ${isDragging ? 'opacity-40' : 'opacity-100'}
-      `}
+      aria-label={ariaLabel}
+      className={cn(
+        'w-full text-left rounded px-1.5 py-1 text-white text-xs',
+        'shadow-sm select-none cursor-pointer transition-opacity',
+        isDragging ? 'opacity-40' : 'opacity-100',
+      )}
     >
       <div className="font-semibold truncate">
         {startLabel} – {endLabel}

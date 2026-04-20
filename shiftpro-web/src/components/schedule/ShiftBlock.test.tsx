@@ -59,4 +59,12 @@ describe('ShiftBlock', () => {
     );
     expect(screen.getByText('DRAFT')).toBeTruthy();
   });
+
+  it('has accessible label with employee name', () => {
+    render(
+      <ShiftBlock shift={baseShift} timezone="America/Los_Angeles" onClick={vi.fn()} />
+    );
+    const button = screen.getByRole('button');
+    expect(button.getAttribute('aria-label')).toContain('Alex P');
+  });
 });
