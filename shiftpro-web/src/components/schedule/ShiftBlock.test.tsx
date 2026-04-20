@@ -1,7 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ShiftBlock } from './ShiftBlock';
 import type { ShiftRow } from '@/hooks/useShifts';
+
+const wrap = (ui: React.ReactNode) => (
+  <DndProvider backend={HTML5Backend}>{ui}</DndProvider>
+);
 
 const baseShift: ShiftRow = {
   id: 'shift-1',
@@ -22,48 +28,48 @@ const baseShift: ShiftRow = {
 
 describe('ShiftBlock', () => {
   it('renders time range', () => {
-    render(
+    render(wrap(
       <ShiftBlock shift={baseShift} timezone="America/Los_Angeles" onClick={vi.fn()} />
-    );
+    ));
     expect(screen.getByText(/9:00 AM/)).toBeTruthy();
     expect(screen.getByText(/5:00 PM/)).toBeTruthy();
   });
 
   it('renders position name', () => {
-    render(
+    render(wrap(
       <ShiftBlock shift={baseShift} timezone="America/Los_Angeles" onClick={vi.fn()} />
-    );
+    ));
     expect(screen.getByText('Wrangler')).toBeTruthy();
   });
 
   it('uses position color as background', () => {
-    const { container } = render(
+    render(wrap(
       <ShiftBlock shift={baseShift} timezone="America/Los_Angeles" onClick={vi.fn()} />
-    );
-    const block = container.firstChild as HTMLElement;
+    ));
+    const block = screen.getByRole('button');
     expect(block.style.backgroundColor).toBe('rgb(16, 185, 129)'); // #10B981
   });
 
   it('calls onClick when clicked', () => {
     const onClick = vi.fn();
-    render(
+    render(wrap(
       <ShiftBlock shift={baseShift} timezone="America/Los_Angeles" onClick={onClick} />
-    );
+    ));
     fireEvent.click(screen.getByRole('button'));
     expect(onClick).toHaveBeenCalledWith(baseShift);
   });
 
   it('shows DRAFT badge when status is draft', () => {
-    render(
+    render(wrap(
       <ShiftBlock shift={baseShift} timezone="America/Los_Angeles" onClick={vi.fn()} />
-    );
+    ));
     expect(screen.getByText('DRAFT')).toBeTruthy();
   });
 
   it('has accessible label with employee name', () => {
-    render(
+    render(wrap(
       <ShiftBlock shift={baseShift} timezone="America/Los_Angeles" onClick={vi.fn()} />
-    );
+    ));
     const button = screen.getByRole('button');
     expect(button.getAttribute('aria-label')).toContain('Alex P');
   });
