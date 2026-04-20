@@ -22,14 +22,14 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) { setSession(session); loadProfile(session.user.id); }
-      else useAuthStore.getState().setProfile(null, null);
+      else clearSession();
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) { setSession(session); loadProfile(session.user.id); }
       else clearSession();
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [setSession, clearSession]);
 
   return (
     <DndProvider backend={HTML5Backend}>

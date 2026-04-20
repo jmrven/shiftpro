@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Calendar, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
@@ -13,7 +13,6 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { label: 'Dashboard',  href: '/',           icon: '⊞', roles: ['admin','manager','employee'] },
   { label: 'Attendance', href: '/attendance',  icon: '⏱',  roles: ['admin','manager','employee'] },
   { label: 'Time Off',   href: '/time-off',    icon: '🏖',  roles: ['admin','manager','employee'] },
   { label: 'Employees',  href: '/employees',   icon: '👥', roles: ['admin','manager'] },
@@ -26,6 +25,10 @@ export function Sidebar() {
   const { role } = useAuthStore();
   const location = useLocation();
   const [scheduleOpen, setScheduleOpen] = useState(location.pathname.startsWith('/schedule'));
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/schedule')) setScheduleOpen(true);
+  }, [location.pathname]);
 
   const visible = NAV.filter((item) => role && item.roles.includes(role));
 
@@ -57,6 +60,8 @@ export function Sidebar() {
         <div>
           <button
             onClick={() => setScheduleOpen((o) => !o)}
+            aria-expanded={scheduleOpen}
+            aria-controls="schedule-submenu"
             className={cn(
               'w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors',
               location.pathname.startsWith('/schedule')
@@ -71,7 +76,7 @@ export function Sidebar() {
             <ChevronDown className={cn('h-4 w-4 transition-transform', scheduleOpen && 'rotate-180')} />
           </button>
           {scheduleOpen && (
-            <div className="ml-6 mt-1 space-y-1">
+            <div id="schedule-submenu" className="ml-6 mt-1 space-y-1">
               {[
                 { to: '/schedule',              label: 'Schedule Editor' },
                 { to: '/schedule/team',         label: 'Team Schedule' },
