@@ -129,7 +129,7 @@ export function ScheduleGrid({
                 <img src={profile.avatar_url} className="h-6 w-6 rounded-full object-cover" alt="" />
               ) : (
                 <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                  {profile.first_name[0]}
+                  {profile.first_name.charAt(0) || '?'}
                 </div>
               )}
               <span className="truncate font-medium">
