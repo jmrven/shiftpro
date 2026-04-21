@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAvailability, useUpsertAvailability } from '@/hooks/useAvailability';
 import { useAuthStore } from '@/stores/authStore';
 import type { Database } from '@/types/database';
@@ -52,11 +52,11 @@ export function AvailabilityPage() {
   const [savedMsg, setSavedMsg] = useState(false);
 
   // Sync when data loads
-  useState(() => {
+  useEffect(() => {
     if (data) {
       setDays(buildInitial(data));
     }
-  });
+  }, [data]);
 
   function updateDay(day: DayOfWeek, patch: Partial<DayState>) {
     setDays((prev) => ({ ...prev, [day]: { ...prev[day], ...patch } }));
