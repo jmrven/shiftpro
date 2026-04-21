@@ -5,6 +5,8 @@ import { cn } from '@/lib/cn';
 import { ShiftBlock } from './ShiftBlock';
 import { shiftsForCell, openShiftsForCell } from '@/lib/scheduleUtils';
 import type { ShiftRow } from '@/hooks/useShifts';
+import type { AvailabilityRow } from '@/hooks/useAvailability';
+import { AvailabilityOverlay } from './AvailabilityOverlay';
 
 type Employee = {
   id: string;
@@ -25,9 +27,13 @@ interface GridCellProps {
   onShiftClick: (shift: ShiftRow) => void;
   onCellClick: () => void;
   onDrop: (shiftId: string) => void;
+  availability?: AvailabilityRow[];
+  profileId?: string;
+  cellDate?: Date;
+  showAvailability?: boolean;
 }
 
-function GridCell({ shifts, timezone, onShiftClick, onCellClick, onDrop }: GridCellProps) {
+function GridCell({ shifts, timezone, onShiftClick, onCellClick, onDrop, availability, profileId, cellDate, showAvailability }: GridCellProps) {
   const [{ isOver }, drop] = useDrop({
     accept: 'SHIFT',
     drop: (item: { id: string }) => onDrop(item.id),
@@ -44,6 +50,14 @@ function GridCell({ shifts, timezone, onShiftClick, onCellClick, onDrop }: GridC
         shifts.length === 0 && 'cursor-pointer hover:bg-accent/50 group',
       )}
     >
+      {showAvailability && profileId && cellDate && availability && (
+        <AvailabilityOverlay
+          availability={availability}
+          profileId={profileId}
+          cellDate={cellDate}
+          timezone={timezone}
+        />
+      )}
       {shifts.length === 0 && (
         <span className="absolute inset-0 flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 text-xl">
           +
@@ -70,12 +84,16 @@ interface Props {
   onShiftClick: (shift: ShiftRow) => void;
   onShiftDrop?: (shiftId: string, newProfileId: string | null, newDate: Date) => void;
   showOpenShiftsRow?: boolean;
+  availability?: AvailabilityRow[];
+  showAvailability?: boolean;
 }
 
 export function ScheduleGrid({
   weekDays, employees, shifts, timezone,
   onCellClick, onShiftClick, onShiftDrop,
   showOpenShiftsRow = true,
+  availability,
+  showAvailability,
 }: Props) {
   const colCount = weekDays.length;
 
@@ -146,6 +164,10 @@ export function ScheduleGrid({
                   onShiftClick={onShiftClick}
                   onCellClick={() => onCellClick(profile.id, day)}
                   onDrop={(shiftId) => onShiftDrop?.(shiftId, profile.id, day)}
+                  availability={availability}
+                  profileId={profile.id}
+                  cellDate={day}
+                  showAvailability={showAvailability}
                 />
               );
             })}

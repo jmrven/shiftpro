@@ -13,12 +13,18 @@ interface Props {
   isPublishing: boolean;
   sortMode: EmployeeSortMode;
   onSortChange: (mode: EmployeeSortMode) => void;
+  showAvailability: boolean;
+  onToggleAvailability: () => void;
+  showTimeOff: boolean;
+  onToggleTimeOff: () => void;
 }
 
 export function ScheduleToolbar({
   schedules, selectedScheduleId, currentWeek,
   onScheduleChange, onWeekChange, onPublish, isPublishing,
   sortMode, onSortChange,
+  showAvailability, onToggleAvailability,
+  showTimeOff, onToggleTimeOff,
 }: Props) {
   const weekLabel = format(currentWeek, 'MMM d') + ' – ' + format(addWeeks(currentWeek, 1), 'MMM d, yyyy');
 
@@ -44,6 +50,27 @@ export function ScheduleToolbar({
         <option value="first_name">First Name</option>
         <option value="last_name">Last Name</option>
       </select>
+
+      <button
+        onClick={onToggleAvailability}
+        className={`h-9 px-3 rounded-md border text-sm transition-colors ${
+          showAvailability
+            ? 'bg-primary/10 border-primary text-primary'
+            : 'border-input text-muted-foreground hover:bg-accent'
+        }`}
+      >
+        Availability
+      </button>
+      <button
+        onClick={onToggleTimeOff}
+        className={`h-9 px-3 rounded-md border text-sm transition-colors ${
+          showTimeOff
+            ? 'bg-primary/10 border-primary text-primary'
+            : 'border-input text-muted-foreground hover:bg-accent'
+        }`}
+      >
+        Time Off
+      </button>
 
       <div className="flex items-center gap-1 ml-auto">
         <button

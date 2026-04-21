@@ -5,6 +5,7 @@ import { callFunction } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useSchedules } from '@/hooks/useSchedules';
 import { useShifts, useEmployeesForSchedule, useUpdateShift } from '@/hooks/useShifts';
+import { useAllAvailability } from '@/hooks/useAvailability';
 import { getWeekDays, employeeSortComparator, type EmployeeSortMode } from '@/lib/scheduleUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { ScheduleToolbar } from '@/components/schedule/ScheduleToolbar';
@@ -25,6 +26,8 @@ export function ScheduleEditorPage() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<EmployeeSortMode>('custom');
+  const [showAvailability, setShowAvailability] = useState(false);
+  const [showTimeOff, setShowTimeOff] = useState(false);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -49,6 +52,8 @@ export function ScheduleEditorPage() {
   const employees = employeesQuery.data ?? [];
 
   const updateShift = useUpdateShift();
+
+  const { data: allAvailability = [] } = useAllAvailability();
 
   const sortedEmployees = useMemo(
     () => [...employees].sort(employeeSortComparator(sortMode)),
@@ -147,6 +152,10 @@ export function ScheduleEditorPage() {
         isPublishing={isPublishing}
         sortMode={sortMode}
         onSortChange={setSortMode}
+        showAvailability={showAvailability}
+        onToggleAvailability={() => setShowAvailability((v) => !v)}
+        showTimeOff={showTimeOff}
+        onToggleTimeOff={() => setShowTimeOff((v) => !v)}
       />
 
       {publishError && (
@@ -172,6 +181,8 @@ export function ScheduleEditorPage() {
               onCellClick={handleCellClick}
               onShiftClick={handleShiftClick}
               onShiftDrop={handleShiftDrop}
+              availability={allAvailability}
+              showAvailability={showAvailability}
             />
             <ScheduleFooter
               weekDays={weekDays}
