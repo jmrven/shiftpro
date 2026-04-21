@@ -13,6 +13,9 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { EmployeesPage } from '@/pages/EmployeesPage';
 import { EmployeeProfilePage } from '@/pages/EmployeeProfilePage';
 import { ScheduleEditorPage } from '@/pages/ScheduleEditorPage';
+import { AvailabilityPage } from '@/pages/AvailabilityPage';
+import { MySchedulePage } from '@/pages/MySchedulePage';
+import { TeamSchedulePage } from '@/pages/TeamSchedulePage';
 import { AppShell } from '@/components/layout/AppShell';
 import { RequireAuth } from '@/components/layout/RequireAuth';
 
@@ -45,9 +48,9 @@ export default function App() {
             <Route element={<AppShell />}>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/schedule" element={<ScheduleEditorPage />} />
-              <Route path="/schedule/my" element={<div className="p-6 text-muted-foreground">My Schedule — Phase 2b</div>} />
-              <Route path="/schedule/team" element={<div className="p-6 text-muted-foreground">Team Schedule — Phase 2b</div>} />
-              <Route path="/schedule/availability" element={<div className="p-6 text-muted-foreground">Availability — Phase 2b</div>} />
+              <Route path="/schedule/my" element={<MySchedulePage />} />
+              <Route path="/schedule/team" element={<TeamSchedulePage />} />
+              <Route path="/schedule/availability" element={<AvailabilityPage />} />
               <Route path="/schedule/requests" element={<div className="p-6 text-muted-foreground">Requests — Phase 2c</div>} />
               <Route path="/attendance" element={<div className="p-6 text-muted-foreground">Attendance — Phase 3</div>} />
               <Route path="/time-off" element={<div className="p-6 text-muted-foreground">Time Off — Phase 3</div>} />
