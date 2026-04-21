@@ -5,8 +5,16 @@ export async function callFunction<T>(name: string, body: object): Promise<T> {
   const { data, error } = await supabase.functions.invoke<T>(name, { body });
   if (error) {
     if (error instanceof FunctionsHttpError) {
-      const body = await error.context.json().catch(() => null);
-      const message = body?.error?.message ?? body?.message ?? error.message;
+      const raw = await error.context.text().catch(() => null);
+      let message = error.message;
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          message = parsed?.error?.message ?? parsed?.message ?? raw;
+        } catch {
+          message = raw;
+        }
+      }
       throw new Error(message);
     }
     throw error;
