@@ -7,26 +7,27 @@ export type AvailabilityRow = Database['public']['Tables']['employee_availabilit
 
 export type UpsertAvailabilityPayload = Database['public']['Tables']['employee_availability']['Insert'];
 
-/** Fetch availability for one employee (or the current user if profileId omitted). */
 export function useAvailability(profileId?: string) {
   const user = useAuthStore((s) => s.user);
+  const organizationId = useAuthStore((s) => s.organizationId);
   const targetId = profileId ?? user?.id;
 
   return useQuery({
-    queryKey: ['availability', targetId],
+    queryKey: ['availability', organizationId, targetId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employee_availability')
         .select('id, profile_id, day_of_week, is_available, start_time, end_time, organization_id, created_at, updated_at')
+        .eq('organization_id', organizationId!)
         .eq('profile_id', targetId!);
       if (error) throw error;
-      return data as AvailabilityRow[];
+      return data;
     },
-    enabled: !!targetId,
+    enabled: !!targetId && !!organizationId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
-/** Fetch availability for all employees in an org (managers/admins). */
 export function useAllAvailability() {
   const organizationId = useAuthStore((s) => s.organizationId);
   return useQuery({
@@ -37,9 +38,10 @@ export function useAllAvailability() {
         .select('id, profile_id, day_of_week, is_available, start_time, end_time, organization_id, created_at, updated_at')
         .eq('organization_id', organizationId!);
       if (error) throw error;
-      return data as AvailabilityRow[];
+      return data;
     },
     enabled: !!organizationId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -48,10 +50,11 @@ export function useUpsertAvailability() {
   const organizationId = useAuthStore((s) => s.organizationId);
 
   return useMutation({
-    mutationFn: async (rows: UpsertAvailabilityPayload[]) => {
+    mutationFn: async (rows: Array<Omit<UpsertAvailabilityPayload, 'organization_id'>>) => {
+      if (!organizationId) throw new Error('Organization context missing');
       const withOrg = rows.map((r) => ({
         ...r,
-        organization_id: organizationId!,
+        organization_id: organizationId,
       }));
       const { data, error } = await supabase
         .from('employee_availability')
