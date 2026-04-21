@@ -49,9 +49,13 @@ export function useUpsertAvailability() {
 
   return useMutation({
     mutationFn: async (rows: UpsertAvailabilityPayload[]) => {
+      const withOrg = rows.map((r) => ({
+        ...r,
+        organization_id: organizationId!,
+      }));
       const { data, error } = await supabase
         .from('employee_availability')
-        .upsert(rows, { onConflict: 'profile_id,day_of_week' })
+        .upsert(withOrg, { onConflict: 'profile_id,day_of_week' })
         .select();
       if (error) throw error;
       return data;
