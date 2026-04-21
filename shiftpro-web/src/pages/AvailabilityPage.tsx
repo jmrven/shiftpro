@@ -51,9 +51,8 @@ export function AvailabilityPage() {
   const [days, setDays] = useState<Record<DayOfWeek, DayState>>(() => buildInitial(data));
   const [savedMsg, setSavedMsg] = useState(false);
 
-  // Sync when data loads
   useEffect(() => {
-    if (data) {
+    if (data && data.length > 0) {
       setDays(buildInitial(data));
     }
   }, [data]);
