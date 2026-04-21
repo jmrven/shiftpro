@@ -50,7 +50,10 @@ export function ScheduleEditorPage() {
 
   const updateShift = useUpdateShift();
 
-  const sortedEmployees = [...employees].sort(employeeSortComparator(sortMode));
+  const sortedEmployees = useMemo(
+    () => [...employees].sort(employeeSortComparator(sortMode)),
+    [employees, sortMode],
+  );
 
   // Build employee rates map
   const employeeRates = useMemo(

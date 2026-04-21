@@ -35,6 +35,7 @@ export function ScheduleToolbar({
       </select>
 
       <select
+        aria-label="Sort employees"
         value={sortMode}
         onChange={(e) => onSortChange(e.target.value as EmployeeSortMode)}
         className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm"
