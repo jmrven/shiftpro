@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { format, addWeeks, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Schedule } from '@/hooks/useSchedules';
@@ -17,6 +18,10 @@ interface Props {
   onToggleAvailability: () => void;
   showTimeOff: boolean;
   onToggleTimeOff: () => void;
+  onOpenTemplates: () => void;
+  onClearShifts: () => void;
+  onExportCSV: () => void;
+  onCopyPreviousWeek: () => void;
 }
 
 export function ScheduleToolbar({
@@ -25,7 +30,9 @@ export function ScheduleToolbar({
   sortMode, onSortChange,
   showAvailability, onToggleAvailability,
   showTimeOff, onToggleTimeOff,
+  onOpenTemplates, onClearShifts, onExportCSV, onCopyPreviousWeek,
 }: Props) {
+  const [toolsOpen, setToolsOpen] = useState(false);
   const weekLabel = format(currentWeek, 'MMM d') + ' – ' + format(addWeeks(currentWeek, 1), 'MMM d, yyyy');
 
   return (
@@ -92,6 +99,24 @@ export function ScheduleToolbar({
         >
           Today
         </button>
+      </div>
+
+      <div className="relative">
+        <button
+          onClick={() => setToolsOpen((v) => !v)}
+          className="h-9 px-3 rounded-md border border-input text-sm hover:bg-accent"
+        >
+          Tools ▾
+        </button>
+        {toolsOpen && (
+          <div className="absolute right-0 top-full mt-1 w-48 rounded-md border border-border bg-background shadow-lg z-20">
+            <button onClick={() => { onOpenTemplates(); setToolsOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-accent">Templates…</button>
+            <button onClick={() => { onCopyPreviousWeek(); setToolsOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-accent">Copy Previous Week</button>
+            <button onClick={() => { onExportCSV(); setToolsOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-accent">Export CSV</button>
+            <hr className="border-border my-1" />
+            <button onClick={() => { onClearShifts(); setToolsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-accent">Clear Shifts…</button>
+          </div>
+        )}
       </div>
 
       <button

@@ -1,17 +1,20 @@
 import { useState, useCallback, useMemo } from 'react';
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, format } from 'date-fns';
 import { fromZonedTime, format as formatTz } from 'date-fns-tz';
 import { callFunction } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { useSchedules } from '@/hooks/useSchedules';
 import { useShifts, useEmployeesForSchedule, useUpdateShift } from '@/hooks/useShifts';
 import { useAllAvailability } from '@/hooks/useAvailability';
-import { getWeekDays, employeeSortComparator, type EmployeeSortMode } from '@/lib/scheduleUtils';
+import { getWeekDays, employeeSortComparator, shiftDurationHours, type EmployeeSortMode } from '@/lib/scheduleUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { ScheduleToolbar } from '@/components/schedule/ScheduleToolbar';
 import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
 import { ScheduleFooter } from '@/components/schedule/ScheduleFooter';
 import { ShiftModal } from '@/components/schedule/ShiftModal';
+import { TemplateModal } from '@/components/schedule/TemplateModal';
+import { useCopyPreviousWeek } from '@/hooks/useScheduleTemplates';
 import type { ShiftRow } from '@/hooks/useShifts';
 
 export function ScheduleEditorPage() {
@@ -34,6 +37,9 @@ export function ScheduleEditorPage() {
   const [modalDefaultDate, setModalDefaultDate] = useState<Date>(new Date());
   const [modalDefaultProfileId, setModalDefaultProfileId] = useState<string | undefined>(undefined);
   const [editShift, setEditShift] = useState<ShiftRow | undefined>(undefined);
+
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const copyPreviousWeek = useCopyPreviousWeek();
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 0 });
@@ -134,6 +140,48 @@ export function ScheduleEditorPage() {
     [shifts, timezone, updateShift]
   );
 
+  async function handleCopyPreviousWeek() {
+    if (!activeScheduleId) return;
+    await copyPreviousWeek.mutateAsync({
+      schedule_id: activeScheduleId,
+      target_week_start: format(currentWeek, 'yyyy-MM-dd'),
+    });
+  }
+
+  function handleExportCSV() {
+    if (shifts.length === 0) return;
+    const headers = ['Employee', 'Position', 'Date', 'Start', 'End', 'Hours'];
+    const rows = shifts.map((s) => [
+      s.profile ? `${s.profile.first_name} ${s.profile.last_name}` : 'Open Shift',
+      s.position?.name ?? '',
+      format(new Date(s.start_time), 'yyyy-MM-dd'),
+      format(new Date(s.start_time), 'HH:mm'),
+      format(new Date(s.end_time), 'HH:mm'),
+      shiftDurationHours(new Date(s.start_time), new Date(s.end_time), s.break_minutes).toFixed(2),
+    ]);
+    const csv  = [headers, ...rows].map((r) => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `schedule-${format(currentWeek, 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleClearShifts() {
+    if (!activeScheduleId) return;
+    if (!window.confirm('Delete all DRAFT shifts this week? This cannot be undone.')) return;
+    supabase
+      .from('shifts')
+      .delete()
+      .eq('schedule_id', activeScheduleId)
+      .eq('status', 'draft')
+      .gte('start_time', weekStart.toISOString())
+      .lt('start_time', weekEnd.toISOString())
+      .then(() => qc.invalidateQueries({ queryKey: ['shifts'] }));
+  }
+
   const isLoading = schedulesQuery.isLoading || shiftsQuery.isLoading || employeesQuery.isLoading;
 
   return (
@@ -156,6 +204,10 @@ export function ScheduleEditorPage() {
         onToggleAvailability={() => setShowAvailability((v) => !v)}
         showTimeOff={showTimeOff}
         onToggleTimeOff={() => setShowTimeOff((v) => !v)}
+        onOpenTemplates={() => setTemplateModalOpen(true)}
+        onCopyPreviousWeek={handleCopyPreviousWeek}
+        onExportCSV={handleExportCSV}
+        onClearShifts={handleClearShifts}
       />
 
       {publishError && (
@@ -204,6 +256,15 @@ export function ScheduleEditorPage() {
           defaultProfileId={modalDefaultProfileId}
           editShift={editShift}
           onClose={() => setModalOpen(false)}
+        />
+      )}
+
+      {activeScheduleId && (
+        <TemplateModal
+          open={templateModalOpen}
+          onClose={() => setTemplateModalOpen(false)}
+          scheduleId={activeScheduleId}
+          currentWeek={currentWeek}
         />
       )}
     </div>
