@@ -1,6 +1,7 @@
 import { format, addWeeks, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Schedule } from '@/hooks/useSchedules';
+import type { EmployeeSortMode } from '@/lib/scheduleUtils';
 
 interface Props {
   schedules: Schedule[];
@@ -10,11 +11,14 @@ interface Props {
   onWeekChange: (date: Date) => void;
   onPublish: () => void;
   isPublishing: boolean;
+  sortMode: EmployeeSortMode;
+  onSortChange: (mode: EmployeeSortMode) => void;
 }
 
 export function ScheduleToolbar({
   schedules, selectedScheduleId, currentWeek,
   onScheduleChange, onWeekChange, onPublish, isPublishing,
+  sortMode, onSortChange,
 }: Props) {
   const weekLabel = format(currentWeek, 'MMM d') + ' – ' + format(addWeeks(currentWeek, 1), 'MMM d, yyyy');
 
@@ -28,6 +32,16 @@ export function ScheduleToolbar({
         {schedules.map((s) => (
           <option key={s.id} value={s.id}>{s.name}</option>
         ))}
+      </select>
+
+      <select
+        value={sortMode}
+        onChange={(e) => onSortChange(e.target.value as EmployeeSortMode)}
+        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm"
+      >
+        <option value="custom">Custom Order</option>
+        <option value="first_name">First Name</option>
+        <option value="last_name">Last Name</option>
       </select>
 
       <div className="flex items-center gap-1 ml-auto">

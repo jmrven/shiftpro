@@ -5,7 +5,7 @@ import { callFunction } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useSchedules } from '@/hooks/useSchedules';
 import { useShifts, useEmployeesForSchedule, useUpdateShift } from '@/hooks/useShifts';
-import { getWeekDays } from '@/lib/scheduleUtils';
+import { getWeekDays, employeeSortComparator, type EmployeeSortMode } from '@/lib/scheduleUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { ScheduleToolbar } from '@/components/schedule/ScheduleToolbar';
 import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
@@ -24,6 +24,7 @@ export function ScheduleEditorPage() {
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<EmployeeSortMode>('custom');
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -48,6 +49,8 @@ export function ScheduleEditorPage() {
   const employees = employeesQuery.data ?? [];
 
   const updateShift = useUpdateShift();
+
+  const sortedEmployees = [...employees].sort(employeeSortComparator(sortMode));
 
   // Build employee rates map
   const employeeRates = useMemo(
@@ -139,6 +142,8 @@ export function ScheduleEditorPage() {
         onWeekChange={handleWeekChange}
         onPublish={handlePublish}
         isPublishing={isPublishing}
+        sortMode={sortMode}
+        onSortChange={setSortMode}
       />
 
       {publishError && (
@@ -158,7 +163,7 @@ export function ScheduleEditorPage() {
           <>
             <ScheduleGrid
               weekDays={weekDays}
-              employees={employees}
+              employees={sortedEmployees}
               shifts={shifts}
               timezone={timezone}
               onCellClick={handleCellClick}
