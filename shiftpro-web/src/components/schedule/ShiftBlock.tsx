@@ -3,6 +3,7 @@ import { useDrag } from 'react-dnd';
 import { cn } from '@/lib/cn';
 import { formatShiftTime, shiftDurationHours } from '@/lib/scheduleUtils';
 import type { ShiftRow } from '@/hooks/useShifts';
+import { ShiftRequestMenu } from './ShiftRequestMenu';
 
 interface Props {
   shift: ShiftRow;
@@ -31,31 +32,34 @@ export function ShiftBlock({ shift, timezone, onClick }: Props) {
   const ariaLabel = `${employeeName}: ${startLabel}–${endLabel}, ${hours.toFixed(1)} hours${shift.status === 'draft' ? ', draft' : ''}`;
 
   return (
-    <button
-      ref={drag as unknown as Ref<HTMLButtonElement>}
-      onClick={() => onClick(shift)}
-      style={{ backgroundColor: color }}
-      aria-label={ariaLabel}
-      className={cn(
-        'w-full text-left rounded px-1.5 py-1 text-white text-xs',
-        'shadow-sm select-none transition-opacity',
-        isDragging ? 'opacity-40 cursor-grabbing' : 'opacity-100 cursor-grab',
-      )}
-    >
-      <div className="font-semibold truncate">
-        {startLabel} – {endLabel}
-      </div>
-      {shift.position && (
-        <div className="truncate opacity-90">{shift.position.name}</div>
-      )}
-      <div className="flex items-center justify-between mt-0.5 opacity-75">
-        <span>{hours.toFixed(1)}h</span>
-        {shift.status === 'draft' && (
-          <span className="text-[9px] font-bold tracking-wide bg-white/20 rounded px-1">
-            DRAFT
-          </span>
+    <div className="relative group">
+      <button
+        ref={drag as unknown as Ref<HTMLButtonElement>}
+        onClick={() => onClick(shift)}
+        style={{ backgroundColor: color }}
+        aria-label={ariaLabel}
+        className={cn(
+          'w-full text-left rounded px-1.5 py-1 text-white text-xs',
+          'shadow-sm select-none transition-opacity',
+          isDragging ? 'opacity-40 cursor-grabbing' : 'opacity-100 cursor-grab',
         )}
-      </div>
-    </button>
+      >
+        <div className="font-semibold truncate pr-4">
+          {startLabel} – {endLabel}
+        </div>
+        {shift.position && (
+          <div className="truncate opacity-90">{shift.position.name}</div>
+        )}
+        <div className="flex items-center justify-between mt-0.5 opacity-75">
+          <span>{hours.toFixed(1)}h</span>
+          {shift.status === 'draft' && (
+            <span className="text-[9px] font-bold tracking-wide bg-white/20 rounded px-1">
+              DRAFT
+            </span>
+          )}
+        </div>
+      </button>
+      <ShiftRequestMenu shift={shift} />
+    </div>
   );
 }
