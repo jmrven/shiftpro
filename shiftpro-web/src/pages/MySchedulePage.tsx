@@ -8,7 +8,7 @@ import {
   format,
   isToday,
 } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useSchedules } from '@/hooks/useSchedules';
 import { useShifts } from '@/hooks/useShifts';
@@ -163,6 +163,37 @@ export function MySchedulePage() {
                 </p>
               )}
             </div>
+
+            {/* iCal subscription */}
+            {user?.id && (() => {
+              const icalUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ical-feed?profile_id=${user.id}`;
+              return (
+                <div className="mt-6 rounded-lg border border-border p-4">
+                  <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>Subscribe to your schedule:</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(icalUrl)}
+                      className="flex-1 min-w-0 rounded border border-input bg-muted px-3 py-1.5 text-left font-mono text-xs text-muted-foreground truncate hover:bg-accent hover:text-foreground transition-colors"
+                      title="Click to copy"
+                    >
+                      {icalUrl}
+                    </button>
+                    <a
+                      href={icalUrl}
+                      download
+                      className="shrink-0 rounded border border-input px-3 py-1.5 text-xs hover:bg-accent transition-colors"
+                    >
+                      Download .ics
+                    </a>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">Click the URL to copy, then paste into Google Calendar, Apple Calendar, or Outlook.</p>
+                </div>
+              );
+            })()}
           </>
         )}
       </div>
