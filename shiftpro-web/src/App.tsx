@@ -16,6 +16,7 @@ import { ScheduleEditorPage } from '@/pages/ScheduleEditorPage';
 import { AvailabilityPage } from '@/pages/AvailabilityPage';
 import { MySchedulePage } from '@/pages/MySchedulePage';
 import { TeamSchedulePage } from '@/pages/TeamSchedulePage';
+import { RequestsPage } from '@/pages/RequestsPage';
 import { AppShell } from '@/components/layout/AppShell';
 import { RequireAuth } from '@/components/layout/RequireAuth';
 
@@ -51,7 +52,7 @@ export default function App() {
               <Route path="/schedule/my" element={<MySchedulePage />} />
               <Route path="/schedule/team" element={<TeamSchedulePage />} />
               <Route path="/schedule/availability" element={<AvailabilityPage />} />
-              <Route path="/schedule/requests" element={<div className="p-6 text-muted-foreground">Requests — Phase 2c</div>} />
+              <Route path="/schedule/requests" element={<RequestsPage />} />
               <Route path="/attendance" element={<div className="p-6 text-muted-foreground">Attendance — Phase 3</div>} />
               <Route path="/time-off" element={<div className="p-6 text-muted-foreground">Time Off — Phase 3</div>} />
               <Route path="/messages" element={<div className="p-6 text-muted-foreground">Messages — Phase 4</div>} />
