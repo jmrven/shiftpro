@@ -45,9 +45,9 @@ serve(async (req) => {
     // Apply business logic on approve
     if (action === 'approve') {
       if (request.type === 'swap') {
-        const { data: shiftA } = await svc.from('shifts').select('profile_id').eq('id', request.shift_id).single();
-        const { data: shiftB } = await svc.from('shifts').select('profile_id').eq('id', request.target_shift_id).single();
-        if (!shiftA || !shiftB) throw { code: 'NOT_FOUND', message: 'Shift not found for swap' };
+        const { data: shiftA, error: errA } = await svc.from('shifts').select('profile_id').eq('id', request.shift_id).single();
+        const { data: shiftB, error: errB } = await svc.from('shifts').select('profile_id').eq('id', request.target_shift_id).single();
+        if (errA || errB || !shiftA || !shiftB) throw { code: 'NOT_FOUND', message: 'Shift not found for swap' };
         await svc.from('shifts').update({ profile_id: shiftB.profile_id }).eq('id', request.shift_id);
         await svc.from('shifts').update({ profile_id: shiftA.profile_id }).eq('id', request.target_shift_id);
       }
