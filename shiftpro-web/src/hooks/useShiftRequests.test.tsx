@@ -3,14 +3,15 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useShiftRequests } from './useShiftRequests';
 
+const mockChain: any = {
+  eq: () => mockChain,
+  order: () => Promise.resolve({ data: [], error: null }),
+};
+
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: () => ({
-      select: () => ({
-        eq: () => ({
-          order: () => Promise.resolve({ data: [], error: null }),
-        }),
-      }),
+      select: () => mockChain,
     }),
   },
 }));

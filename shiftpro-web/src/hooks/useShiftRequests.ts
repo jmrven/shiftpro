@@ -68,6 +68,7 @@ export function useShiftRequests(status: RequestStatus | 'all' = 'pending') {
       const { data, error } = await supabase
         .from('shift_requests')
         .select(selectStr)
+        .eq('organization_id', organizationId!)
         .eq('status', status)
         .order('created_at', { ascending: false });
       if (error) throw error;
