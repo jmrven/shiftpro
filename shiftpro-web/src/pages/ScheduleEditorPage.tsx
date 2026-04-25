@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSchedules } from '@/hooks/useSchedules';
 import { useShifts, useEmployeesForSchedule, useUpdateShift } from '@/hooks/useShifts';
 import { useAllAvailability } from '@/hooks/useAvailability';
+import { useRealtimeShifts } from '@/hooks/useRealtimeShifts';
 import { getWeekDays, employeeSortComparator, shiftDurationHours, type EmployeeSortMode } from '@/lib/scheduleUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { ScheduleToolbar } from '@/components/schedule/ScheduleToolbar';
@@ -52,6 +53,8 @@ export function ScheduleEditorPage() {
 
   // Auto-select first schedule when schedules load
   const activeScheduleId = selectedScheduleId ?? (schedules.length > 0 ? schedules[0].id : null);
+
+  useRealtimeShifts(activeScheduleId);
 
   const shiftsQuery = useShifts(activeScheduleId, weekStart, weekEnd);
   const shifts = shiftsQuery.data ?? [];
