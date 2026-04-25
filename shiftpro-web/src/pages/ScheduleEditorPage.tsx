@@ -14,6 +14,7 @@ import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
 import { ScheduleFooter } from '@/components/schedule/ScheduleFooter';
 import { ShiftModal } from '@/components/schedule/ShiftModal';
 import { TemplateModal } from '@/components/schedule/TemplateModal';
+import { AddEmployeeModal } from '@/components/schedule/AddEmployeeModal';
 import { useCopyPreviousWeek } from '@/hooks/useScheduleTemplates';
 import type { ShiftRow } from '@/hooks/useShifts';
 
@@ -39,6 +40,7 @@ export function ScheduleEditorPage() {
   const [editShift, setEditShift] = useState<ShiftRow | undefined>(undefined);
 
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [addEmployeeModalOpen, setAddEmployeeModalOpen] = useState(false);
   const copyPreviousWeek = useCopyPreviousWeek();
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 0 });
@@ -235,6 +237,7 @@ export function ScheduleEditorPage() {
               onShiftDrop={handleShiftDrop}
               availability={allAvailability}
               showAvailability={showAvailability}
+              onManageEmployees={() => setAddEmployeeModalOpen(true)}
             />
             <ScheduleFooter
               weekDays={weekDays}
@@ -256,6 +259,15 @@ export function ScheduleEditorPage() {
           defaultProfileId={modalDefaultProfileId}
           editShift={editShift}
           onClose={() => setModalOpen(false)}
+        />
+      )}
+
+      {activeScheduleId && (
+        <AddEmployeeModal
+          open={addEmployeeModalOpen}
+          scheduleId={activeScheduleId}
+          assignedProfileIds={employees.map((e) => e.profile.id)}
+          onClose={() => setAddEmployeeModalOpen(false)}
         />
       )}
 

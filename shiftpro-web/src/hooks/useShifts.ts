@@ -102,6 +102,36 @@ export function useDeleteShift() {
   });
 }
 
+export function useAddEmployeeToSchedule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ scheduleId, profileId, sortOrder }: { scheduleId: string; profileId: string; sortOrder: number }) => {
+      const { error } = await supabase
+        .from('employee_schedules')
+        .insert({ schedule_id: scheduleId, profile_id: profileId, sort_order: sortOrder });
+      if (error) throw error;
+    },
+    onSuccess: (_data, { scheduleId }) =>
+      qc.invalidateQueries({ queryKey: ['schedule-employees', scheduleId] }),
+  });
+}
+
+export function useRemoveEmployeeFromSchedule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ scheduleId, profileId }: { scheduleId: string; profileId: string }) => {
+      const { error } = await supabase
+        .from('employee_schedules')
+        .delete()
+        .eq('schedule_id', scheduleId)
+        .eq('profile_id', profileId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, { scheduleId }) =>
+      qc.invalidateQueries({ queryKey: ['schedule-employees', scheduleId] }),
+  });
+}
+
 export function useEmployeesForSchedule(scheduleId: string | null) {
   return useQuery({
     queryKey: ['schedule-employees', scheduleId],

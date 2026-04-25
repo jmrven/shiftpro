@@ -86,6 +86,7 @@ interface Props {
   showOpenShiftsRow?: boolean;
   availability?: AvailabilityRow[];
   showAvailability?: boolean;
+  onManageEmployees?: () => void;
 }
 
 export function ScheduleGrid({
@@ -94,6 +95,7 @@ export function ScheduleGrid({
   showOpenShiftsRow = true,
   availability,
   showAvailability,
+  onManageEmployees,
 }: Props) {
   const colCount = weekDays.length;
 
@@ -173,6 +175,20 @@ export function ScheduleGrid({
             })}
           </React.Fragment>
         ))}
+        {/* Add Employee row */}
+        {onManageEmployees && (
+          <div
+            className="border-b border-border px-3 py-2"
+            style={{ gridColumn: `1 / span ${weekDays.length + 1}` }}
+          >
+            <button
+              onClick={onManageEmployees}
+              className="text-xs text-primary hover:underline font-medium"
+            >
+              + Add / Remove Employees
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
