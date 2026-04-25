@@ -55,28 +55,26 @@ export function useShiftRequests(status: RequestStatus | 'all' = 'pending') {
         )
       `;
 
-      if (status === 'all') {
-        const { data, error } = await supabase
-          .from('shift_requests')
-          .select(selectStr)
-          .eq('organization_id', organizationId!)
-          .order('created_at', { ascending: false });
-        if (error) throw error;
-        return data as unknown as ShiftRequestRow[];
-      }
-
-      const { data, error } = await supabase
+      let q = supabase
         .from('shift_requests')
         .select(selectStr)
         .eq('organization_id', organizationId!)
-        .eq('status', status)
         .order('created_at', { ascending: false });
+      if (status !== 'all') q = q.eq('status', status);
+      const { data, error } = await q;
       if (error) throw error;
       return data as unknown as ShiftRequestRow[];
     },
     enabled: !!organizationId,
   });
 }
+
+export type MyShiftRequestRow = Pick<
+  ShiftRequestRow,
+  'id' | 'type' | 'status' | 'shift_id' | 'target_shift_id' | 'requester_note' | 'manager_note' | 'created_at'
+> & {
+  shift: { start_time: string; end_time: string; position: { name: string; color: string } | null } | null;
+};
 
 export function useMyShiftRequests() {
   const user = useAuthStore((s) => s.user);
@@ -96,7 +94,7 @@ export function useMyShiftRequests() {
         .eq('requester_id', user!.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      return data as unknown as MyShiftRequestRow[];
     },
     enabled: !!user?.id,
   });
@@ -158,6 +156,7 @@ export function useRespondToRequest() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['shift-requests'] });
       qc.invalidateQueries({ queryKey: ['shifts'] });
+      qc.invalidateQueries({ queryKey: ['my-shift-requests'] });
     },
   });
 }
