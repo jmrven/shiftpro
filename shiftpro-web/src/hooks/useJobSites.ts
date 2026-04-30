@@ -23,6 +23,7 @@ export function useJobSites() {
       const { data, error } = await supabase
         .from('job_sites')
         .select('id, name, address, geofence_radius_meters, is_active')
+        .eq('organization_id', organizationId!)
         .eq('is_active', true)
         .order('name');
       if (error) throw error;

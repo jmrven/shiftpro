@@ -141,6 +141,7 @@ export function useNoShows() {
         supabase
           .from('clock_events')
           .select('profile_id')
+          .eq('organization_id', organizationId!)
           .eq('event_type', 'clock_in')
           .gte('timestamp', todayStart.toISOString()),
       ]);

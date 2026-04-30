@@ -56,6 +56,8 @@ export default function App() {
               <Route path="/schedule/availability" element={<AvailabilityPage />} />
               <Route path="/schedule/requests" element={<RequestsPage />} />
               <Route path="/attendance" element={<AttendancePage />} />
+              <Route path="/attendance/timesheets" element={<div className="p-6 text-muted-foreground">Timesheets — Phase 3b</div>} />
+              <Route path="/attendance/my-timesheets" element={<div className="p-6 text-muted-foreground">My Timesheets — Phase 3b</div>} />
               <Route path="/time-off" element={<div className="p-6 text-muted-foreground">Time Off — Phase 3</div>} />
               <Route path="/messages" element={<div className="p-6 text-muted-foreground">Messages — Phase 4</div>} />
 
