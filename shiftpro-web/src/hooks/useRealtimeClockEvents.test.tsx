@@ -4,12 +4,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { useRealtimeClockEvents } from './useRealtimeClockEvents';
 
-const { mockUnsubscribe, mockSubscribe, mockOn, mockChannel } = vi.hoisted(() => {
+const { mockUnsubscribe, mockChannel } = vi.hoisted(() => {
   const mockUnsubscribe = vi.fn();
   const mockSubscribe = vi.fn().mockReturnValue({ unsubscribe: mockUnsubscribe });
   const mockOn = vi.fn().mockReturnThis();
   const mockChannel = vi.fn().mockReturnValue({ on: mockOn, subscribe: mockSubscribe });
-  return { mockUnsubscribe, mockSubscribe, mockOn, mockChannel };
+  return { mockUnsubscribe, mockChannel };
 });
 
 vi.mock('@/lib/supabase', () => ({
