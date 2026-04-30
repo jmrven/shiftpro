@@ -17,6 +17,8 @@ import { AvailabilityPage } from '@/pages/AvailabilityPage';
 import { MySchedulePage } from '@/pages/MySchedulePage';
 import { TeamSchedulePage } from '@/pages/TeamSchedulePage';
 import { RequestsPage } from '@/pages/RequestsPage';
+import { AttendancePage } from '@/pages/AttendancePage';
+import { JobSitesSettingsPage } from '@/pages/JobSitesSettingsPage';
 import { AppShell } from '@/components/layout/AppShell';
 import { RequireAuth } from '@/components/layout/RequireAuth';
 
@@ -53,7 +55,7 @@ export default function App() {
               <Route path="/schedule/team" element={<TeamSchedulePage />} />
               <Route path="/schedule/availability" element={<AvailabilityPage />} />
               <Route path="/schedule/requests" element={<RequestsPage />} />
-              <Route path="/attendance" element={<div className="p-6 text-muted-foreground">Attendance — Phase 3</div>} />
+              <Route path="/attendance" element={<AttendancePage />} />
               <Route path="/time-off" element={<div className="p-6 text-muted-foreground">Time Off — Phase 3</div>} />
               <Route path="/messages" element={<div className="p-6 text-muted-foreground">Messages — Phase 4</div>} />
 
@@ -66,7 +68,8 @@ export default function App() {
 
               {/* Admin only */}
               <Route element={<RequireAuth roles={['admin']} />}>
-                <Route path="/settings" element={<div className="p-6 text-muted-foreground">Settings — Phase 5</div>} />
+                <Route path="/settings" element={<Navigate to="/settings/job-sites" replace />} />
+                <Route path="/settings/job-sites" element={<JobSitesSettingsPage />} />
               </Route>
             </Route>
           </Route>
