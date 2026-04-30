@@ -96,7 +96,7 @@ serve(async (req) => {
         ...(locationStr ? { location: locationStr } : {}),
         is_within_geofence: withinGeofence,
         geofence_job_site_id: geofenceJobSiteId,
-        ip_address: req.headers.get('x-forwarded-for') ?? null,
+        ip_address: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? null,
         user_agent: req.headers.get('user-agent') ?? null,
       })
       .select()
