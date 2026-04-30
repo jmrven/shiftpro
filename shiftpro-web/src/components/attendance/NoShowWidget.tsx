@@ -1,10 +1,13 @@
-import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { useNoShows } from '@/hooks/useClockEvents';
+import { useAuthStore } from '@/stores/authStore';
 
 export function NoShowWidget() {
-  const { data: noShows = [], isLoading } = useNoShows();
+  const timezone = useAuthStore((s) => s.organization?.timezone ?? 'UTC');
+  const { data: noShows = [], isLoading, isError } = useNoShows();
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
+  if (isError) return <div className="text-sm text-destructive">Failed to load no-show data.</div>;
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -21,7 +24,7 @@ export function NoShowWidget() {
                 </span>
               </div>
               <span className="text-xs text-muted-foreground">
-                Shift started {format(new Date(s.start_time), 'h:mm a')} — not clocked in
+                Shift started {formatInTimeZone(new Date(s.start_time), timezone, 'h:mm a')} — not clocked in
               </span>
             </li>
           ))}

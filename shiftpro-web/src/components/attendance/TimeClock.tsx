@@ -13,9 +13,10 @@ export function TimeClock() {
 
   const status = clockStatus?.status ?? 'clocked_out';
 
+  const { request: requestGeo } = geo;
   useEffect(() => {
-    geo.request();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    requestGeo();
+  }, [requestGeo]);
 
   async function handleAction(action: 'clock_in' | 'clock_out' | 'break_start' | 'break_end') {
     setError(null);

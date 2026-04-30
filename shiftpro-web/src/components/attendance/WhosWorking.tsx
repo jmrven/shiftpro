@@ -1,14 +1,16 @@
-import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { useActiveTimesheets } from '@/hooks/useClockEvents';
 import { useRealtimeClockEvents } from '@/hooks/useRealtimeClockEvents';
 import { useAuthStore } from '@/stores/authStore';
 
 export function WhosWorking() {
   const organizationId = useAuthStore((s) => s.organizationId);
+  const timezone = useAuthStore((s) => s.organization?.timezone ?? 'UTC');
   useRealtimeClockEvents(organizationId);
-  const { data: active = [], isLoading } = useActiveTimesheets();
+  const { data: active = [], isLoading, isError } = useActiveTimesheets();
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
+  if (isError) return <div className="text-sm text-destructive">Failed to load attendance data.</div>;
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -25,7 +27,7 @@ export function WhosWorking() {
                 </span>
               </div>
               <span className="text-xs text-muted-foreground">
-                since {format(new Date(ts.clock_in), 'h:mm a')}
+                since {formatInTimeZone(new Date(ts.clock_in), timezone, 'h:mm a')}
               </span>
             </li>
           ))}
