@@ -58,7 +58,7 @@ export function useClockState() {
     queryKey: ['clock-state', user?.id],
     queryFn: async () => {
       const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+      todayStart.setUTCHours(0, 0, 0, 0);
       const { data, error } = await supabase
         .from('clock_events')
         .select('event_type, timestamp')
@@ -103,7 +103,8 @@ export function useActiveTimesheets() {
       const todayStr = new Date().toISOString().slice(0, 10);
       const { data, error } = await supabase
         .from('timesheets')
-        .select('id, profile_id, clock_in, profile:profiles(first_name, last_name, avatar_url)')
+        .select('id, profile_id, clock_in, profile:profiles!profile_id(first_name, last_name, avatar_url)')
+        .eq('organization_id', organizationId!)
         .eq('date', todayStr)
         .not('clock_in', 'is', null)
         .is('clock_out', null);
@@ -126,13 +127,13 @@ export function useNoShows() {
     queryKey: ['clock-events', 'no-shows', organizationId],
     queryFn: async () => {
       const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+      todayStart.setUTCHours(0, 0, 0, 0);
       const cutoff = new Date(Date.now() - 15 * 60 * 1000);
 
       const [shiftsRes, clockedRes] = await Promise.all([
         supabase
           .from('shifts')
-          .select('id, profile_id, start_time, profile:profiles(first_name, last_name)')
+          .select('id, profile_id, start_time, profile:profiles!profile_id(first_name, last_name)')
           .eq('status', 'published')
           .not('profile_id', 'is', null)
           .gte('start_time', todayStart.toISOString())

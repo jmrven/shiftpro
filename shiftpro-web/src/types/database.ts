@@ -14,6 +14,73 @@ export type Database = {
   }
   public: {
     Tables: {
+      clock_events: {
+        Row: {
+          created_at: string
+          event_type: Database["public"]["Enums"]["clock_event_type"]
+          geofence_job_site_id: string | null
+          id: string
+          ip_address: unknown
+          is_within_geofence: boolean | null
+          location: unknown
+          notes: string | null
+          organization_id: string
+          profile_id: string
+          timestamp: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: Database["public"]["Enums"]["clock_event_type"]
+          geofence_job_site_id?: string | null
+          id?: string
+          ip_address?: unknown
+          is_within_geofence?: boolean | null
+          location?: unknown
+          notes?: string | null
+          organization_id: string
+          profile_id: string
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["clock_event_type"]
+          geofence_job_site_id?: string | null
+          id?: string
+          ip_address?: unknown
+          is_within_geofence?: boolean | null
+          location?: unknown
+          notes?: string | null
+          organization_id?: string
+          profile_id?: string
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clock_events_geofence_job_site_id_fkey"
+            columns: ["geofence_job_site_id"]
+            isOneToOne: false
+            referencedRelation: "job_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clock_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clock_events_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_availability: {
         Row: {
           created_at: string
@@ -108,8 +175,9 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
-          geofence_radius: number
+          geofence_radius_meters: number
           id: string
+          is_active: boolean
           location: unknown
           name: string
           organization_id: string
@@ -118,8 +186,9 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
-          geofence_radius?: number
+          geofence_radius_meters?: number
           id?: string
+          is_active?: boolean
           location?: unknown
           name: string
           organization_id: string
@@ -128,8 +197,9 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
-          geofence_radius?: number
+          geofence_radius_meters?: number
           id?: string
+          is_active?: boolean
           location?: unknown
           name?: string
           organization_id?: string
@@ -706,6 +776,114 @@ export type Database = {
         }
         Relationships: []
       }
+      timesheets: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          break_minutes: number
+          clock_in: string | null
+          clock_in_location: unknown
+          clock_out: string | null
+          clock_out_location: unknown
+          created_at: string
+          date: string
+          id: string
+          is_manual_entry: boolean
+          notes: string | null
+          organization_id: string
+          overtime_minutes: number | null
+          profile_id: string
+          regular_minutes: number | null
+          schedule_id: string | null
+          shift_id: string | null
+          status: Database["public"]["Enums"]["timesheet_status"]
+          total_minutes: number | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          break_minutes?: number
+          clock_in?: string | null
+          clock_in_location?: unknown
+          clock_out?: string | null
+          clock_out_location?: unknown
+          created_at?: string
+          date: string
+          id?: string
+          is_manual_entry?: boolean
+          notes?: string | null
+          organization_id: string
+          overtime_minutes?: number | null
+          profile_id: string
+          regular_minutes?: number | null
+          schedule_id?: string | null
+          shift_id?: string | null
+          status?: Database["public"]["Enums"]["timesheet_status"]
+          total_minutes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          break_minutes?: number
+          clock_in?: string | null
+          clock_in_location?: unknown
+          clock_out?: string | null
+          clock_out_location?: unknown
+          created_at?: string
+          date?: string
+          id?: string
+          is_manual_entry?: boolean
+          notes?: string | null
+          organization_id?: string
+          overtime_minutes?: number | null
+          profile_id?: string
+          regular_minutes?: number | null
+          schedule_id?: string | null
+          shift_id?: string | null
+          status?: Database["public"]["Enums"]["timesheet_status"]
+          total_minutes?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timesheets_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timesheets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timesheets_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timesheets_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timesheets_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       geography_columns: {
@@ -913,6 +1091,14 @@ export type Database = {
         | { Args: { table_name: string }; Returns: string }
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      find_job_site_for_location: {
+        Args: { p_latitude: number; p_longitude: number; p_org_id: string }
+        Returns: {
+          job_site_id: string
+          job_site_name: string
+          within_geofence: boolean
+        }[]
+      }
       geometry: { Args: { "": string }; Returns: unknown }
       geometry_above: {
         Args: { geom1: unknown; geom2: unknown }
@@ -1651,6 +1837,7 @@ export type Database = {
       }
     }
     Enums: {
+      clock_event_type: "clock_in" | "clock_out" | "break_start" | "break_end"
       day_of_week:
         | "sunday"
         | "monday"
@@ -1663,6 +1850,7 @@ export type Database = {
       request_status: "pending" | "approved" | "denied" | "canceled"
       request_type: "swap" | "offer" | "drop" | "open_shift"
       shift_status: "draft" | "published"
+      timesheet_status: "pending" | "approved" | "rejected"
       user_role: "admin" | "manager" | "employee"
     }
     CompositeTypes: {
@@ -1799,6 +1987,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      clock_event_type: ["clock_in", "clock_out", "break_start", "break_end"],
       day_of_week: [
         "sunday",
         "monday",
@@ -1812,6 +2001,7 @@ export const Constants = {
       request_status: ["pending", "approved", "denied", "canceled"],
       request_type: ["swap", "offer", "drop", "open_shift"],
       shift_status: ["draft", "published"],
+      timesheet_status: ["pending", "approved", "rejected"],
       user_role: ["admin", "manager", "employee"],
     },
   },
